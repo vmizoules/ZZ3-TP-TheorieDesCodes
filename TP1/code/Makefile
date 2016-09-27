@@ -26,6 +26,8 @@ $(EXEC):$(OBJETS) Makefile
 .cpp.o:
 	$(CCPP) $(CFLAGS) -c $< -o $@
 
+run: $(EXEC)
+	./$(EXEC)
 clean:
 	rm $(OBJETS)
 clear:
