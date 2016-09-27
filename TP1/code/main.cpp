@@ -194,6 +194,7 @@ int main()
 {
 	// Init vars
 	vector<Symbol*> alphabet;
+	float antropie = 0.0;
 
 	// Compute the frequencies of the symbol
 	CreateAlphabet(alphabet);
@@ -204,6 +205,16 @@ int main()
 	// Display the result
 	for(size_t i=0;i<alphabet.size();++i)
 		cout << "Name : " << alphabet[i]->name << " ; Code : " << alphabet[i]->code << endl;
+
+	// Antropie calcul
+	for(size_t i=0;i<alphabet.size();++i) {
+		antropie =
+			antropie +
+			(float)alphabet[i]->code.size() *
+			(float)alphabet[i]->freq / (float)100
+			;
+	}
+	cout << "Antropie : " << antropie << endl;
 
 	// Clear the memory
 	DeleteMemory(alphabet,root);
