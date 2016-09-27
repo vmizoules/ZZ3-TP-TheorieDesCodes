@@ -200,7 +200,6 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
         	// Get file content
             string content;
             getline(file,content);
-            cout << content.size() << endl;
 
             // Counts the number of letters by letter
             for (unsigned int i = 0; i < content.size(); i++){
