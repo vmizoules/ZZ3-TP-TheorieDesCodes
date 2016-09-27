@@ -156,11 +156,27 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
 		alphabet.push_back(new Symbol("x",0.53));
 		alphabet.push_back(new Symbol("y",0.26));
 		alphabet.push_back(new Symbol("z",0.12));
-	}
-	else
-	{
 
-		// To Do: Code Here
+    //A mettre dans le else
+
+    // open file 
+    ifstream file("test.txt", ios::in); 
+        // Check
+    if(file) {
+        string content;
+        getline(file,content);
+        cout << content; 
+        file.close();  
+    } else {
+        cerr << "Failed !" << endl;
+    }
+  }
+  else
+  {
+
+    // To Do: Code Here
+    
+
 		// 1/ Take the probabilty of letters in french langage (default code)
 		// 2/ Compute the probabilty by the text to encode (text.txt)
 
