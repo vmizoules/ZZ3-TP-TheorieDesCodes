@@ -6,6 +6,8 @@
 #include <iostream>
 #include <cstdlib>
 
+#include <map>
+
 using namespace std;
 
 
@@ -157,29 +159,75 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
 		alphabet.push_back(new Symbol("y",0.26));
 		alphabet.push_back(new Symbol("z",0.12));
 
-    //A mettre dans le else
-
-    // open file 
-    ifstream file("test.txt", ios::in); 
-        // Check
-    if(file) {
-        string content;
-        getline(file,content);
-        cout << content; 
-        file.close();  
-    } else {
-        cerr << "Failed !" << endl;
-    }
   }
   else
   {
+  		// Add all french letters in alphMap
+        map<char,double> alphMap;
+        alphMap.insert(pair<char,double>('a',0));
+        alphMap.insert(pair<char,double>('b',0));
+        alphMap.insert(pair<char,double>('c',0));
+        alphMap.insert(pair<char,double>('d',0));
+        alphMap.insert(pair<char,double>('e',0));
+        alphMap.insert(pair<char,double>('f',0));
+        alphMap.insert(pair<char,double>('g',0));
+        alphMap.insert(pair<char,double>('h',0));
+        alphMap.insert(pair<char,double>('i',0));
+        alphMap.insert(pair<char,double>('j',0));
+        alphMap.insert(pair<char,double>('k',0));
+        alphMap.insert(pair<char,double>('l',0));
+        alphMap.insert(pair<char,double>('m',0));
+        alphMap.insert(pair<char,double>('n',0));
+        alphMap.insert(pair<char,double>('o',0));
+        alphMap.insert(pair<char,double>('p',0));
+        alphMap.insert(pair<char,double>('q',0));
+        alphMap.insert(pair<char,double>('r',0));
+        alphMap.insert(pair<char,double>('s',0));
+        alphMap.insert(pair<char,double>('t',0));
+        alphMap.insert(pair<char,double>('u',0));
+        alphMap.insert(pair<char,double>('v',0));
+        alphMap.insert(pair<char,double>('w',0));
+        alphMap.insert(pair<char,double>('x',0));
+        alphMap.insert(pair<char,double>('y',0));
+        alphMap.insert(pair<char,double>('z',0));
+ 
+        // open file in read mode
+        ifstream file("text.txt", ios::in); 
+        
+        // Check file 
+        if(file) {
 
-    // To Do: Code Here
-    
+        	// Get file content
+            string content;
+            getline(file,content);
+            cout << content.size() << endl;
 
-		// 1/ Take the probabilty of letters in french langage (default code)
-		// 2/ Compute the probabilty by the text to encode (text.txt)
+            // Counts the number of letters by letter
+            for (unsigned int i = 0; i < content.size(); i++){
+                (*alphMap.find(content[i])).second = (*alphMap.find(content[i])).second + 1;
+            }
 
+			string letter = "";
+			double probability = 0;
+            for (map<char,double>::iterator it=alphMap.begin(); it!=alphMap.end(); ++it){
+            	
+            	// Calculating the probability by letter
+				it->second = (it->second*100)/(content.size()+1);
+				
+            	// Add letter and his probability to alphabet
+				if (it->second!=0)
+				{
+					letter = it->first;
+					probability = it->second;
+            		alphabet.push_back(new Symbol(letter,probability));
+				}
+            }
+
+            // close file
+            file.close();  
+        } else {
+            cerr << "Failed open file !" << endl;
+        }
 	}
 } 
 
@@ -197,7 +245,7 @@ int main()
 	float antropie = 0.0;
 
 	// Compute the frequencies of the symbol
-	CreateAlphabet(alphabet);
+	CreateAlphabet(alphabet,false);
 
 	// Build the Huffman code tree 
 	Symbol* root = CreateHuffmanCode(alphabet);
