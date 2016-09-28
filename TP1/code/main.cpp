@@ -199,7 +199,7 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
             string content;
             getline(file,content);
 
-            // Counts the number of letters by letter
+            // Counts the number of iteration by letter
             for (unsigned int i = 0; i < content.size(); i++){
                 (*alphMap.find(content[i])).second = (*alphMap.find(content[i])).second + 1;
             }
@@ -211,7 +211,7 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
                 // Calculating the probability by letter
                 it->second = (it->second*100)/(content.size()+1);
 
-                // Add letter and his probability to alphabet
+                // Add letter and its probability to the alphabet
                 if (it->second!=0) {
                     letter = it->first;
                     probability = it->second;
