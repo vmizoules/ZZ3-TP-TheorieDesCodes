@@ -5,8 +5,8 @@
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
-
 #include <map>
+#include <stdexcept>
 
 using namespace std;
 
@@ -70,10 +70,10 @@ void assignCodeOnChildren(Symbol* root){
 
 	//if right child exists
 	if(root->right != NULL) {
-		// assign code on left child
+		// assign code on right child
 		root->right->code = root->code + "1";
 		
-		// re-run on left child
+		// re-run on right child
 		assignCodeOnChildren(root->right);
 	}
 }
@@ -129,40 +129,38 @@ Symbol* CreateHuffmanCode(vector<Symbol*>& alphabet)
 // crée un alphabet (liste des symboles/proba associé)
 void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
 {
-	if(Proba)
-	{
-		// Probability of french letters
-		alphabet.push_back(new Symbol("a",8.11));
-		alphabet.push_back(new Symbol("b",0.81));
-		alphabet.push_back(new Symbol("c",3.38));
-		alphabet.push_back(new Symbol("d",4.28));
-		alphabet.push_back(new Symbol("e",17.69));
-		alphabet.push_back(new Symbol("f",1.13));
-		alphabet.push_back(new Symbol("g",1.19));
-		alphabet.push_back(new Symbol("h",0.74));
-		alphabet.push_back(new Symbol("i",7.24));
-		alphabet.push_back(new Symbol("j",0.18));
-		alphabet.push_back(new Symbol("k",0.02));
-		alphabet.push_back(new Symbol("l",5.99));
-		alphabet.push_back(new Symbol("m",2.29));
-		alphabet.push_back(new Symbol("n",7.68));
-		alphabet.push_back(new Symbol("o",5.2));
-		alphabet.push_back(new Symbol("p",2.92));
-		alphabet.push_back(new Symbol("q",0.83));
-		alphabet.push_back(new Symbol("r",6.43));
-		alphabet.push_back(new Symbol("s",8.87));
-		alphabet.push_back(new Symbol("t",7.44));
-		alphabet.push_back(new Symbol("u",5.23));
-		alphabet.push_back(new Symbol("v",1.28));
-		alphabet.push_back(new Symbol("w",0.06));
-		alphabet.push_back(new Symbol("x",0.53));
-		alphabet.push_back(new Symbol("y",0.26));
-		alphabet.push_back(new Symbol("z",0.12));
+    if(Proba) {
 
-  }
-  else
-  {
-  		// Add all french letters in alphMap
+        // Probability of french letters
+        alphabet.push_back(new Symbol("a",8.11));
+        alphabet.push_back(new Symbol("b",0.81));
+        alphabet.push_back(new Symbol("c",3.38));
+        alphabet.push_back(new Symbol("d",4.28));
+        alphabet.push_back(new Symbol("e",17.69));
+        alphabet.push_back(new Symbol("f",1.13));
+        alphabet.push_back(new Symbol("g",1.19));
+        alphabet.push_back(new Symbol("h",0.74));
+        alphabet.push_back(new Symbol("i",7.24));
+        alphabet.push_back(new Symbol("j",0.18));
+        alphabet.push_back(new Symbol("k",0.02));
+        alphabet.push_back(new Symbol("l",5.99));
+        alphabet.push_back(new Symbol("m",2.29));
+        alphabet.push_back(new Symbol("n",7.68));
+        alphabet.push_back(new Symbol("o",5.2));
+        alphabet.push_back(new Symbol("p",2.92));
+        alphabet.push_back(new Symbol("q",0.83));
+        alphabet.push_back(new Symbol("r",6.43));
+        alphabet.push_back(new Symbol("s",8.87));
+        alphabet.push_back(new Symbol("t",7.44));
+        alphabet.push_back(new Symbol("u",5.23));
+        alphabet.push_back(new Symbol("v",1.28));
+        alphabet.push_back(new Symbol("w",0.06));
+        alphabet.push_back(new Symbol("x",0.53));
+        alphabet.push_back(new Symbol("y",0.26));
+        alphabet.push_back(new Symbol("z",0.12));
+    } else {
+
+        // Add all french letters in alphMap
         map<char,double> alphMap;
         alphMap.insert(pair<char,double>('a',0));
         alphMap.insert(pair<char,double>('b',0));
@@ -190,14 +188,14 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
         alphMap.insert(pair<char,double>('x',0));
         alphMap.insert(pair<char,double>('y',0));
         alphMap.insert(pair<char,double>('z',0));
- 
+
         // open file in read mode
         ifstream file("text.txt", ios::in); 
-        
+
         // Check file 
         if(file) {
 
-        	// Get file content
+            // Get file content
             string content;
             getline(file,content);
 
@@ -206,39 +204,54 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
                 (*alphMap.find(content[i])).second = (*alphMap.find(content[i])).second + 1;
             }
 
-			string letter = "";
-			double probability = 0;
+            string letter = "";
+            double probability = 0;
             for (map<char,double>::iterator it=alphMap.begin(); it!=alphMap.end(); ++it){
-            	
-            	// Calculating the probability by letter
-				it->second = (it->second*100)/(content.size()+1);
-				
-            	// Add letter and his probability to alphabet
-				if (it->second!=0)
-				{
-					letter = it->first;
-					probability = it->second;
-            		alphabet.push_back(new Symbol(letter,probability));
-				}
+                
+                // Calculating the probability by letter
+                it->second = (it->second*100)/(content.size()+1);
+
+                // Add letter and his probability to alphabet
+                if (it->second!=0) {
+                    letter = it->first;
+                    probability = it->second;
+                    alphabet.push_back(new Symbol(letter,probability));
+                }
             }
 
             // close file
             file.close();  
         } else {
-            cerr << "Failed open file !" << endl;
+            throw runtime_error("Failed open file !");
         }
-	}
+    }
 } 
+
+void DeleteNodeAndChildren(Symbol* root) {
+    //if left child exists
+    if(root->left != NULL) {
+        // re-run on left child
+        DeleteNodeAndChildren(root->left);
+    }
+
+    //if right child exists
+    if(root->right != NULL) {   
+        // re-run on right child
+        DeleteNodeAndChildren(root->right);
+    }
+
+    delete(root);
+}
 
 void DeleteMemory(vector<Symbol*>& alphabet, Symbol* root)
 {
-  // To Do: Code Here
-  // Clear the memory	
+    // Clear the memory
+    DeleteNodeAndChildren(root);
 }
 
+
 // MAIN
-int main()
-{
+int main() {
 	// Init vars
 	vector<Symbol*> alphabet;
 	float antropie = 0.0;
