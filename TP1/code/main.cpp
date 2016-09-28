@@ -285,16 +285,15 @@ int main() {
 	}
 	cout << endl << "Entropy: " << antropie << endl;
 	
-	
-	// [Taux compression] = [Volume final] / [Volume initial]
-	
+	// [Rate] = [final volume] / [initial volume]
 	float finalSize = antropie * fileToLoad->char_nb;
 	float initialSize = 7 * fileToLoad->char_nb;
-	
+	// display
 	cout << endl << "Applied to file '" << fileToLoad->name << "'" << endl;
     cout << "Initial size (in ASCII): " << initialSize << " bits" << endl;
     cout << "Final size (using Huffman): " << finalSize << " bits" << endl;
     cout << "Compression rate: " << finalSize/initialSize << endl;
+    
 	// Clear the memory
 	DeleteMemory(alphabet,root);
 	
