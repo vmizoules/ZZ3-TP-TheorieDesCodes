@@ -10,6 +10,15 @@
 
 using namespace std;
 
+class FileDetails {
+	public:
+		string name;
+		int char_nb; // <equiv> size+1
+
+        FileDetails():name(""), char_nb(-1) {}
+        FileDetails(string newName):name(newName), char_nb(-1) {}
+        FileDetails(string newName, int nb):name(newName), char_nb(nb) {}
+};
 
 // Leafs and nodes
 class Symbol {
@@ -127,9 +136,9 @@ Symbol* CreateHuffmanCode(vector<Symbol*>& alphabet)
 
 
 // crée un alphabet (liste des symboles/proba associé)
-void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
+void CreateAlphabet(vector<Symbol*>& alphabet, bool useProba=true, FileDetails* fileToLoad=NULL)
 {
-    if(Proba) {
+    if(useProba) {
 
         // Probability of french letters
         alphabet.push_back(new Symbol("a",8.11));
@@ -190,7 +199,7 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
         alphMap.insert(pair<char,double>('z',0));
 
         // open file in read mode
-        ifstream file("text.txt", ios::in); 
+        ifstream file(fileToLoad->name.c_str(), ios::in); 
 
         // Check file 
         if(file) {
@@ -198,14 +207,13 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
             // Get file content
             string content;
             getline(file,content);
+            fileToLoad->char_nb = content.size() + 1;
 
             // Counts the number of iteration by letter
             for (unsigned int i = 0; i < content.size(); i++){
                 (*alphMap.find(content[i])).second = (*alphMap.find(content[i])).second + 1;
             }
 
-            string letter = "";
-            double probability = 0;
             for (map<char,double>::iterator it=alphMap.begin(); it!=alphMap.end(); ++it){
                 
                 // Calculating the probability by letter
@@ -213,9 +221,9 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
 
                 // Add letter and its probability to the alphabet
                 if (it->second!=0) {
-                    letter = it->first;
-                    probability = it->second;
-                    alphabet.push_back(new Symbol(letter,probability));
+                    // letter - string(1,it->first)
+                    // probability - it->second;
+                    alphabet.push_back(new Symbol( string(1,it->first) , it->second ));
                 }
             }
 
@@ -255,9 +263,10 @@ int main() {
 	// Init vars
 	vector<Symbol*> alphabet;
 	float antropie = 0.0;
+	FileDetails * fileToLoad = new FileDetails("text.txt");
 
 	// Compute the frequencies of the symbol
-	CreateAlphabet(alphabet,false);
+	CreateAlphabet(alphabet,false,fileToLoad);
 
 	// Build the Huffman code tree 
 	Symbol* root = CreateHuffmanCode(alphabet);
@@ -274,8 +283,18 @@ int main() {
 			(float)alphabet[i]->freq / (float)100
 			;
 	}
-	cout << "Antropie : " << antropie << endl;
-
+	cout << endl << "Entropy: " << antropie << endl;
+	
+	
+	// [Taux compression] = [Volume final] / [Volume initial]
+	
+	float finalSize = antropie * fileToLoad->char_nb;
+	float initialSize = 7 * fileToLoad->char_nb;
+	
+	cout << endl << "Applied to file '" << fileToLoad->name << "'" << endl;
+    cout << "Initial size (in ASCII): " << initialSize << " bits" << endl;
+    cout << "Final size (using Huffman): " << finalSize << " bits" << endl;
+    cout << "Compression rate: " << finalSize/initialSize << endl;
 	// Clear the memory
 	DeleteMemory(alphabet,root);
 	
