@@ -347,6 +347,9 @@ int main()
 	FileDetails * fileToExportGraph = new FileDetails("graph.eps");
 
 	// Compute the frequencies of the symbol
+	// with default alphabet probability
+	// CreateAlphabet(alphabet,true);
+	// with custom file
 	CreateAlphabet(alphabet,false,fileToLoad);
 
 	// Build the Huffman code tree 
@@ -364,7 +367,7 @@ int main()
 			(float)alphabet[i]->freq / (float)100
 			;
 	}
-	cout << endl << "Entropy: " << antropie << endl;
+	cout << endl << "Entropy of HuffMan code : " << antropie << endl;
 	
 	// [Rate] = [final volume] / [initial volume]
 	float finalSize = antropie * fileToLoad->char_nb;
