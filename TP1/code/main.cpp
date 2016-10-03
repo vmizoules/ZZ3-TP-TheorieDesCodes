@@ -63,7 +63,8 @@ class CompareSymbol {
 
 
 // Recursive function to assign huffman code
-void assignCodeOnChildren(Symbol* root){
+void assignCodeOnChildren(Symbol* root)
+{
 	//if left child exists
 	if(root->left != NULL) {
 		// assign code on left child
@@ -232,7 +233,8 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool useProba=true, FileDetails* 
     }
 } 
 
-void DeleteNodeAndChildren(Symbol* root) {
+void DeleteNodeAndChildren(Symbol* root)
+{
     //if left child exists
     if(root->left != NULL) {
         // re-run on left child
@@ -248,13 +250,13 @@ void DeleteNodeAndChildren(Symbol* root) {
     delete(root);
 }
 
-void DeleteMemory(vector<Symbol*>& alphabet, Symbol* root)
+void DeleteMemory(Symbol* root)
 {
     // Clear the memory
     DeleteNodeAndChildren(root);
 }
 
-void exportTreeToFile(FileDetails* fileToExport=NULL) {
+void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symbol* root) {
 	// Open the file in write mode (and delete old content)
 	ofstream exportFile(fileToExport->name.c_str(), ios::out | ios::trunc);
 
@@ -277,7 +279,8 @@ void exportTreeToFile(FileDetails* fileToExport=NULL) {
 }
 
 // MAIN
-int main() {
+int main()
+{
 	// Init vars
 	vector<Symbol*> alphabet;
 	float antropie = 0.0;
@@ -314,10 +317,10 @@ int main() {
     cout << "Compression rate: " << finalSize/initialSize << endl;
     
     // export des données dans un fichier gv (pour graph dot)
-    exportTreeToFile(fileToExport);
+    exportTreeToFile(fileToExport, alphabet, root);
     
 	// Clear the memory
-	DeleteMemory(alphabet,root);
+	DeleteMemory(root);
 	
 	// Exit
 	return 0;
