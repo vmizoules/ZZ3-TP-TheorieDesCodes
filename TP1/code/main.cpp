@@ -46,11 +46,7 @@ class Symbol {
 			Symbol* newRight=NULL)
 			:name(newName), freq(newFreq),code(newCode), leaf(newLeaf), left(newLeft), right(newRight)
 			{}
-	 
-	 	// To Do: Code Here
-	  	// Complete the class
 };
-
 
 class CompareSymbol {
 	public:
@@ -66,7 +62,7 @@ class CompareSymbol {
 };
 
 
-// recursive function
+// Recursive function to assign huffman code
 void assignCodeOnChildren(Symbol* root){
 	//if left child exists
 	if(root->left != NULL) {
@@ -230,6 +226,7 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool useProba=true, FileDetails* 
             // close file
             file.close();  
         } else {
+      		// can't open the file ? -> exception !
             throw runtime_error("Failed open file !");
         }
     }
@@ -257,6 +254,27 @@ void DeleteMemory(vector<Symbol*>& alphabet, Symbol* root)
     DeleteNodeAndChildren(root);
 }
 
+void exportTreeToFile(FileDetails* fileToExport=NULL) {
+	// Open the file in write mode (and delete old content)
+	ofstream exportFile(fileToExport->name.c_str(), ios::out | ios::trunc);
+
+	if(exportFile) {
+		// init gv file
+		exportFile << "digraph html {" << endl;
+	
+		// write things into file
+		exportFile << "..." << endl;
+		
+		// end gv file
+		exportFile << "}" << endl;
+		
+		// close file
+		exportFile.close();
+	} else {
+		// can't open the file ? -> exception !
+		throw runtime_error("Failed open file !");
+	}
+}
 
 // MAIN
 int main() {
@@ -264,6 +282,7 @@ int main() {
 	vector<Symbol*> alphabet;
 	float antropie = 0.0;
 	FileDetails * fileToLoad = new FileDetails("text.txt");
+	FileDetails * fileToExport = new FileDetails("output.gv");
 
 	// Compute the frequencies of the symbol
 	CreateAlphabet(alphabet,false,fileToLoad);
@@ -293,6 +312,9 @@ int main() {
     cout << "Initial size (in ASCII): " << initialSize << " bits" << endl;
     cout << "Final size (using Huffman): " << finalSize << " bits" << endl;
     cout << "Compression rate: " << finalSize/initialSize << endl;
+    
+    // export des données dans un fichier gv (pour graph dot)
+    exportTreeToFile(fileToExport);
     
 	// Clear the memory
 	DeleteMemory(alphabet,root);
