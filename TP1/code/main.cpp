@@ -132,7 +132,7 @@ Symbol* CreateHuffmanCode(vector<Symbol*>& alphabet)
 }
 
 
-// crée un alphabet (liste des symboles/proba associé)
+// create alphabet (list of symbols/proba associated)
 void CreateAlphabet(vector<Symbol*>& alphabet, bool useProba=true, FileDetails* fileToLoad=NULL)
 {
     if(useProba) {
@@ -264,8 +264,13 @@ void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symb
 		// init gv file
 		exportFile << "digraph html {" << endl;
 	
-		// write things into file
-		exportFile << "..." << endl;
+		// write all final leaf into file
+		for(size_t i=0;i<alphabet.size();++i) {
+			cout << alphabet[i]->name << endl;
+		}
+		
+		// write all links
+		while()
 		
 		// end gv file
 		exportFile << "}" << endl;
