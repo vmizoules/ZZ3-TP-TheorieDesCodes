@@ -10,6 +10,15 @@
 
 using namespace std;
 
+class FileDetails {
+	public:
+		string name;
+		int char_nb; // <equiv> size+1
+
+        FileDetails():name(""), char_nb(-1) {}
+        FileDetails(string newName):name(newName), char_nb(-1) {}
+        FileDetails(string newName, int nb):name(newName), char_nb(nb) {}
+};
 
 // Leafs and nodes
 class Symbol {
@@ -37,11 +46,7 @@ class Symbol {
 			Symbol* newRight=NULL)
 			:name(newName), freq(newFreq),code(newCode), leaf(newLeaf), left(newLeft), right(newRight)
 			{}
-	 
-	 	// To Do: Code Here
-	  	// Complete the class
 };
-
 
 class CompareSymbol {
 	public:
@@ -57,8 +62,9 @@ class CompareSymbol {
 };
 
 
-// recursive function
-void assignCodeOnChildren(Symbol* root){
+// Recursive function to assign huffman code
+void assignCodeOnChildren(Symbol* root)
+{
 	//if left child exists
 	if(root->left != NULL) {
 		// assign code on left child
@@ -125,11 +131,10 @@ Symbol* CreateHuffmanCode(vector<Symbol*>& alphabet)
 	return sortedAlphabet.top();
 }
 
-
 // crée un alphabet (liste des symboles/proba associé)
-void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
+void CreateAlphabet(vector<Symbol*>& alphabet, bool useProba=true, FileDetails* fileToLoad=NULL)
 {
-    if(Proba) {
+    if(useProba) {
 
         // Probability of french letters
         alphabet.push_back(new Symbol("a",8.11));
@@ -190,7 +195,7 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
         alphMap.insert(pair<char,double>('z',0));
 
         // open file in read mode
-        ifstream file("text.txt", ios::in); 
+        ifstream file(fileToLoad->name.c_str(), ios::in); 
 
         // Check file 
         if(file) {
@@ -198,14 +203,13 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
             // Get file content
             string content;
             getline(file,content);
+            fileToLoad->char_nb = content.size() + 1;
 
             // Counts the number of iteration by letter
             for (unsigned int i = 0; i < content.size(); i++){
                 (*alphMap.find(content[i])).second = (*alphMap.find(content[i])).second + 1;
             }
 
-            string letter = "";
-            double probability = 0;
             for (map<char,double>::iterator it=alphMap.begin(); it!=alphMap.end(); ++it){
                 
                 // Calculating the probability by letter
@@ -213,21 +217,23 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool Proba=true)
 
                 // Add letter and its probability to the alphabet
                 if (it->second!=0) {
-                    letter = it->first;
-                    probability = it->second;
-                    alphabet.push_back(new Symbol(letter,probability));
+                    // letter - string(1,it->first)
+                    // probability - it->second;
+                    alphabet.push_back(new Symbol( string(1,it->first) , it->second ));
                 }
             }
 
             // close file
             file.close();  
         } else {
+      		// can't open the file ? -> exception !
             throw runtime_error("Failed open file !");
         }
     }
 } 
 
-void DeleteNodeAndChildren(Symbol* root) {
+void DeleteNodeAndChildren(Symbol* root)
+{
     //if left child exists
     if(root->left != NULL) {
         // re-run on left child
@@ -243,7 +249,7 @@ void DeleteNodeAndChildren(Symbol* root) {
     delete(root);
 }
 
-void DeleteMemory(vector<Symbol*>& alphabet, Symbol* root)
+void DeleteMemory(Symbol* root)
 {
     // Clear the memory
     DeleteNodeAndChildren(root);
@@ -254,15 +260,39 @@ void printExportedNode(vector<Symbol*>& alphabet,Symbol * sym){
 	cout << "a [shape=none, margin=0, label=<<TABLE><TR><TD>" << alphabet[0]->name <<"</TD><TD>proba</TD></TR><TR><TD COLSPAN=\"2\">codage</TD></TR></TABLE>>];" << endl;
 }
 
+void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symbol* root) {
+	// Open the file in write mode (and delete old content)
+	ofstream exportFile(fileToExport->name.c_str(), ios::out | ios::trunc);
+
+	if(exportFile) {
+		// init gv file
+		exportFile << "digraph html {" << endl;
+	
+		// write things into file
+		exportFile << "..." << endl;
+		
+		// end gv file
+		exportFile << "}" << endl;
+		
+		// close file
+		exportFile.close();
+	} else {
+		// can't open the file ? -> exception !
+		throw runtime_error("Failed open file !");
+	}
+}
 
 // MAIN
-int main() {
+int main()
+{
 	// Init vars
 	vector<Symbol*> alphabet;
 	float antropie = 0.0;
+	FileDetails * fileToLoad = new FileDetails("text.txt");
+	FileDetails * fileToExport = new FileDetails("output.gv");
 
 	// Compute the frequencies of the symbol
-	CreateAlphabet(alphabet,false);
+	CreateAlphabet(alphabet,false,fileToLoad);
 
 	// Build the Huffman code tree 
 	Symbol* root = CreateHuffmanCode(alphabet);
@@ -282,10 +312,22 @@ int main() {
 			(float)alphabet[i]->freq / (float)100
 			;
 	}
-	cout << "Antropie : " << antropie << endl;
-
+	cout << endl << "Entropy: " << antropie << endl;
+	
+	// [Rate] = [final volume] / [initial volume]
+	float finalSize = antropie * fileToLoad->char_nb;
+	float initialSize = 7 * fileToLoad->char_nb;
+	// display
+	cout << endl << "Applied to file '" << fileToLoad->name << "'" << endl;
+    cout << "Initial size (in ASCII): " << initialSize << " bits" << endl;
+    cout << "Final size (using Huffman): " << finalSize << " bits" << endl;
+    cout << "Compression rate: " << finalSize/initialSize << endl;
+    
+    // export des données dans un fichier gv (pour graph dot)
+    exportTreeToFile(fileToExport, alphabet, root);
+    
 	// Clear the memory
-	DeleteMemory(alphabet,root);
+	DeleteMemory(root);
 	
 	// Exit
 	return 0;
