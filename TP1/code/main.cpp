@@ -249,6 +249,11 @@ void DeleteMemory(vector<Symbol*>& alphabet, Symbol* root)
     DeleteNodeAndChildren(root);
 }
 
+void printExportedNode(vector<Symbol*>& alphabet,Symbol * sym){
+	
+	cout << "a [shape=none, margin=0, label=<<TABLE><TR><TD>" << alphabet[0]->name <<"</TD><TD>proba</TD></TR><TR><TD COLSPAN=\"2\">codage</TD></TR></TABLE>>];" << endl;
+}
+
 
 // MAIN
 int main() {
@@ -265,6 +270,9 @@ int main() {
 	// Display the result
 	for(size_t i=0;i<alphabet.size();++i)
 		cout << "Name : " << alphabet[i]->name << " ; Code : " << alphabet[i]->code << endl;
+		
+	// Export Display
+	printExportedNode(alphabet,root);
 
 	// Antropie calcul
 	for(size_t i=0;i<alphabet.size();++i) {
