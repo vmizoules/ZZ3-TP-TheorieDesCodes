@@ -29,9 +29,11 @@ $(EXEC):$(OBJETS) Makefile
 run: $(EXEC)
 	./$(EXEC)
 clean:
-	rm $(OBJETS)
+	rm $(OBJETS) 
+	rm *.gv
 clear:
 	rm $(EXEC)
+	rm *.eps
 depend:
 	sed -e "/^#DEPENDANCIES/,$$ d" Makefile >dependances
 	echo "#DEPENDANCIES" >> dependances
