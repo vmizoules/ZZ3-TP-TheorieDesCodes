@@ -10,6 +10,8 @@
 
 using namespace std;
 
+/* ================= CLASSES ====================== */
+
 class FileDetails {
 	public:
 		string name;
@@ -61,6 +63,11 @@ class CompareSymbol {
 		}
 };
 
+/* ================= /CLASSES ====================== */
+
+
+
+/* ================= HUFFMAN FUNCTIONS ====================== */
 
 // Recursive function to assign huffman code
 void assignCodeOnChildren(Symbol* root)
@@ -232,6 +239,11 @@ void CreateAlphabet(vector<Symbol*>& alphabet, bool useProba=true, FileDetails* 
     }
 } 
 
+/* ================= / HUFFMAN FUNCTIONS ====================== */
+
+
+/* ================= CLEANUP ====================== */
+
 void DeleteNodeAndChildren(Symbol* root)
 {
     //if left child exists
@@ -254,10 +266,41 @@ void DeleteMemory(Symbol* root)
     // Clear the memory
     DeleteNodeAndChildren(root);
 }
+/* ================= /CLEANUP ====================== */
+
+/* ================= EXPORT ====================== */
 
 void printExportedNode(Symbol * sym, ofstream & stream){
-	
-	stream <<  sym->name << " [shape=none, margin=0, label=<<TABLE><TR><TD>" << sym->name <<"</TD><TD>" << sym->freq << "</TD></TR><TR><TD COLSPAN=\"2\">" << sym->code << "</TD></TR></TABLE>>];" << endl;
+	stream << sym->name;
+	stream << " [shape=none, margin=0, label=<<TABLE><TR><TD>";
+	stream << sym->name;
+	stream <<"</TD><TD>";
+	stream << sym->freq;
+	stream << "</TD></TR><TR><TD COLSPAN=\"2\">";
+	stream << sym->code;
+	stream << "</TD></TR></TABLE>>];";
+	stream << endl;
+}
+
+// Recursive function to link all nodes
+void printExportedLinks(Symbol* root, ofstream & stream) {
+	//if left child exists
+	if(root->left != NULL) {
+		// write left arrow (with 0 on label)
+		stream << root->name << " -> " << root->left->name << "[label=\"0\"];" << endl;
+		
+		// re-run on left child
+		printExportedLinks(root->left, stream);
+	}
+
+	//if right child exists
+	if(root->right != NULL) {
+		// write right arrow (with 1 on label)
+		stream << root->name << " -> " << root->right->name << "[label=\"1\"];" << endl;
+		
+		// re-run on right child
+		printExportedLinks(root->right, stream);
+	}
 }
 
 void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symbol* root) {
@@ -274,7 +317,7 @@ void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symb
 		}
 		
 		// write all links
-		//while()
+		printExportedLinks(root, exportFile);
 		
 		// end gv file
 		exportFile << "}" << endl;
@@ -287,7 +330,13 @@ void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symb
 	}
 }
 
-// MAIN
+void execCmd(string cmd) {
+	system( cmd.c_str() );
+}
+
+/* ================= /EXPORT ====================== */
+
+/* ================= MAIN ====================== */
 int main()
 {
 	// Init vars
@@ -328,10 +377,16 @@ int main()
     // export des données dans un fichier gv (pour graph dot)
     exportTreeToFile(fileToExport, alphabet, root);
     
+    // compile gv to eps
+    execCmd("dot -Tps " + fileToExport->name + " -o graph.eps");
+    
 	// Clear the memory
 	DeleteMemory(root);
 	
 	// Exit
 	return 0;
 }
+
+/* ================= /MAIN ====================== */
+
 
