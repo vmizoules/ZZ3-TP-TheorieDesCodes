@@ -255,9 +255,9 @@ void DeleteMemory(Symbol* root)
     DeleteNodeAndChildren(root);
 }
 
-void printExportedNode(vector<Symbol*>& alphabet,Symbol * sym){
+void printExportedNode(Symbol * sym){
 	
-	cout << "a [shape=none, margin=0, label=<<TABLE><TR><TD>" << alphabet[0]->name <<"</TD><TD>proba</TD></TR><TR><TD COLSPAN=\"2\">codage</TD></TR></TABLE>>];" << endl;
+	cout <<  sym->name << " [shape=none, margin=0, label=<<TABLE><TR><TD>" << sym->name <<"</TD><TD>" << sym->freq << "</TD></TR><TR><TD COLSPAN=\"2\">" << sym->code << "</TD></TR></TABLE>>];" << endl;
 }
 
 void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symbol* root) {
@@ -302,7 +302,7 @@ int main()
 		cout << "Name : " << alphabet[i]->name << " ; Code : " << alphabet[i]->code << endl;
 		
 	// Export Display
-	printExportedNode(alphabet,root);
+	printExportedNode(root);
 
 	// Antropie calcul
 	for(size_t i=0;i<alphabet.size();++i) {
