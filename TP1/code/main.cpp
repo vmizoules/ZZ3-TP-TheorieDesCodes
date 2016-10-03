@@ -344,6 +344,7 @@ int main()
 	float antropie = 0.0;
 	FileDetails * fileToLoad = new FileDetails("text.txt");
 	FileDetails * fileToExport = new FileDetails("output.gv");
+	FileDetails * fileToExportGraph = new FileDetails("graph.eps");
 
 	// Compute the frequencies of the symbol
 	CreateAlphabet(alphabet,false,fileToLoad);
@@ -375,10 +376,12 @@ int main()
     cout << "Compression rate: " << finalSize/initialSize << endl;
     
     // export des données dans un fichier gv (pour graph dot)
+    cout << endl << "Export tree to \"" << fileToExport->name << "\"" << endl;
     exportTreeToFile(fileToExport, alphabet, root);
     
     // compile gv to eps
-    execCmd("dot -Tps " + fileToExport->name + " -o graph.eps");
+    cout << "Render \"" << fileToExport->name << "\" in \"" << fileToExportGraph->name  << "\"" << endl;
+    execCmd("dot -Tps " + fileToExport->name + " -o " + fileToExportGraph->name );
     
 	// Clear the memory
 	DeleteMemory(root);
