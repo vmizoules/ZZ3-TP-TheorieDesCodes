@@ -255,9 +255,9 @@ void DeleteMemory(Symbol* root)
     DeleteNodeAndChildren(root);
 }
 
-void printExportedNode(Symbol * sym){
+void printExportedNode(Symbol * sym, ofstream & stream){
 	
-	cout <<  sym->name << " [shape=none, margin=0, label=<<TABLE><TR><TD>" << sym->name <<"</TD><TD>" << sym->freq << "</TD></TR><TR><TD COLSPAN=\"2\">" << sym->code << "</TD></TR></TABLE>>];" << endl;
+	stream <<  sym->name << " [shape=none, margin=0, label=<<TABLE><TR><TD>" << sym->name <<"</TD><TD>" << sym->freq << "</TD></TR><TR><TD COLSPAN=\"2\">" << sym->code << "</TD></TR></TABLE>>];" << endl;
 }
 
 void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symbol* root) {
@@ -270,7 +270,7 @@ void exportTreeToFile(FileDetails* fileToExport, vector<Symbol*>& alphabet, Symb
 	
 		// write all final leaf into file
 		for(size_t i=0;i<alphabet.size();++i) {
-			cout << alphabet[i]->name << endl;
+			printExportedNode(alphabet[i], exportFile);
 		}
 		
 		// write all links
@@ -305,9 +305,6 @@ int main()
 	// Display the result
 	for(size_t i=0;i<alphabet.size();++i)
 		cout << "Name : " << alphabet[i]->name << " ; Code : " << alphabet[i]->code << endl;
-		
-	// Export Display
-	printExportedNode(root);
 
 	// Antropie calcul
 	for(size_t i=0;i<alphabet.size();++i) {
