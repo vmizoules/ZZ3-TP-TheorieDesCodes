@@ -87,23 +87,19 @@ CImg<double> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
                     }
             
                     // calcul multiplication
-                    sub_sub_total = dctBlock(i,j);
+                    sub_sub_total = (2./step) * Ci * Cj * dctBlock(i,j);
                     sub_sub_total *= cos(((2.0*x+1.0)*i*M_PI)/(2.0*step));
                     sub_sub_total *= cos(((2.0*y+1.0)*j*M_PI)/(2.0*step));
-
                     // get sum
                     sub_total += sub_sub_total;
                 }
             }
-            total = (2./step) * sub_total;
+            total =  sub_total;
             
             // affect value to pixel in DCT block
             block(x,y) = total;
         }
     }
-
-    // cout << block(7,7) <<" " <<  dctBlock(7,7) << endl;
-
     return block;
 }
 
