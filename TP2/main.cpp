@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
+#include <cmath>
 
 #include "CImg.h"
 
@@ -11,10 +12,102 @@
 using namespace std;
 using namespace cimg_library;
 
+
+CImg<double> applyDctOnBlock(CImg<unsigned char> block){
+    // init vars
+    int step = block.width(); // step = width or height of block
+    double Ci,Cj;
+    double total, sub_total, sub_sub_total;
+    CImg<double> dctBlock(step,step,1,1,0);
+
+    // for each pixel in bloc in width    
+    for(int i=0 ; i<step ; ++i) {
+        // for each pixel in bloc in hight
+        for(int j=0 ; j<step ; ++j) {
+
+            // fix Ci and Cj values
+            Ci = 1;
+            if(i==0) {
+                Ci = M_SQRT1_2; // 1/sqrt(2)
+            }
+            Cj = 1;
+            if(j==0) {
+                Cj = M_SQRT1_2;
+            }
+            
+            // run calcul
+            sub_total = 0;
+            for(int x=0 ; x<step ; ++x) {
+                for(int y=0 ; y<step ; ++y) {
+                    // calcul multiplication
+                    sub_sub_total = block(x,y);
+                    sub_sub_total *= cos(((2*x+1)*i*M_PI)/(2*step));
+                    sub_sub_total *= sin(((2*y+1)*j*M_PI)/(2*step));
+
+                    // get sum
+                    sub_total += sub_sub_total;
+                }
+            }
+            total = 2/step * Ci * Cj * sub_total;
+
+            // affect value to pixel in DCT block
+            dctBlock(i,j) = sub_total;
+        }
+    }
+
+    return dctBlock;
+}
+
+CImg<unsigned char> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
+    // init vars
+    int step = dctBlock.width(); // step = width or height of block
+    double Ci,Cj;
+    double total, sub_total, sub_sub_total;
+    CImg<unsigned char> block(step,step,1,1,0);
+
+    // for each pixel in dctbloc in width    
+    for(int i=0 ; i<step ; ++i) {
+        // for each pixel in dctbloc in hight
+        for(int j=0 ; j<step ; ++j) {
+
+            // fix Ci and Cj values
+            Ci = 1;
+            if(i==0) {
+                Ci = M_SQRT1_2; // 1/sqrt(2)
+            }
+            Cj = 1;
+            if(j==0) {
+                Cj = M_SQRT1_2;
+            }
+            
+            // run calcul
+            sub_total = 0;
+            for(int x=0 ; x<step ; ++x) {
+                for(int y=0 ; y<step ; ++y) {
+                    // calcul multiplication
+                    sub_sub_total = dctBlock(x,y);
+                    sub_sub_total *= cos(((2*x+1)*i*M_PI)/(2*step));
+                    sub_sub_total *= sin(((2*y+1)*j*M_PI)/(2*step));
+
+                    // get sum
+                    sub_total += sub_sub_total;
+                }
+            }
+            total = 2/step * Ci * Cj * sub_total;
+
+            // affect value to pixel in DCT block
+            block(i,j) = sub_total;
+        }
+    }
+
+    return block;
+}
+
+
 CImg<unsigned char> JPEGEncoder(CImg<unsigned char> image, float quality)
 {
-    CImg<unsigned char> comp(image.width(),image.height(),1,1,0);
-    comp = image;
+    CImg<unsigned char> compressed_image(image.width(),image.height(),1,1,0);
+    //compressed_image = image;
 
     // Quantization matrix
     CImg<> Q(8,8);
@@ -26,10 +119,41 @@ CImg<unsigned char> JPEGEncoder(CImg<unsigned char> image, float quality)
     Q(5,0)=24;   Q(5,1)=35;   Q(5,2)=55;   Q(5,3)=64;   Q(5,4)=81;   Q(5,5)=104;  Q(5,6)=113;  Q(5,7)=92;
     Q(6,0)=49;   Q(6,1)=64;   Q(6,2)=78;   Q(6,3)=87;   Q(6,4)=103;  Q(6,5)=121;  Q(6,6)=120;  Q(6,7)=101;
     Q(7,0)=72;   Q(7,1)=92;   Q(7,2)=95;   Q(7,3)=98;   Q(7,4)=112;  Q(7,5)=100;  Q(7,6)=103;  Q(7,7)=99;
-    Q *= quality; 
+    Q *= quality;
 
-    // TODO: code to insert
-    return comp;
+    int step = 8; // bloc 8*8
+    CImg<unsigned char> image_block;
+    CImg<unsigned char> new_image_block;
+    CImg<double> dct_block;
+
+    // for each bloc in width    
+    for(int i=0 ; i<image.width()/step ; ++i) {
+        // for each bloc in hight
+        for(int j=0 ; j<image.height()/step ; ++j) {
+            // get one bloc of 8*8 px
+            image_block = image.get_crop( i*8, j*8, i*8+(step-1), j*8+(step-1));
+            
+            // apply dct on block
+            dct_block = applyDctOnBlock(image_block);
+
+            // TODO
+            //CImg<double> quantifier
+
+            // apply dct-1 on dctblock
+            new_image_block = applyDctOnBlock(dct_block);
+
+            // affect bloc in final image
+            // foreach pixel in bloc width
+            for(int ii=0 ; ii<step ; ++ii) {
+                // foreach pixel in bloc height
+                for(int jj=0 ; jj<step ; ++jj){
+                    compressed_image(i*8+ii, j*8+jj)= new_image_block(ii,jj);
+                }
+            }
+        }
+    }
+
+    return compressed_image;
 }
 
 int main()
@@ -40,26 +164,9 @@ int main()
     // Take the luminance information 
     my_image.channel(0);
 
-    float quality=1.;
+    float quality=1.; // low compression
+    //float quality=30.; // strong compression
     CImg<unsigned char> comp_image = JPEGEncoder(my_image,quality);
-
-
-    /////////// TO DELETE ///////////
-    // CImg Library => basic operations
-    int step = 8;
-    int x0 = 16;
-    int y0 = 32;
-    // je prends une sous image de mon image de taille 8   
-    CImg<unsigned char> sub_image = my_image.get_crop(x0,y0,x0+(step-1),y0+(step-1));
-    // Redimmensionne l'image (multiplie par 32)  
-    sub_image.resize(-3200,-3200);
-    // affichage de l'image redimensionnée 
-    CImgDisplay sub_disp(sub_image,"Sub Image"); 
-
-    /////////// TO DELETE ///////////
-
-
-
 
     // Display the bmp file
     CImgDisplay main_disp(my_image,"Initial Image");
@@ -76,20 +183,17 @@ int main()
 /* ---- explications ----- */
 
 /*
-
-CImg<float> myDCT (8,8);
-myDCT(0,0) = .. (affectation au 1er bloc)
-
 (i,j)
 ----> i
 | (0,0) (1,0)
 | (0,1)
 v
 j
-
-Q multiplier par le facteur de qualité
-
 */
+
+// quantification
+//Q multiplier par le facteur de qualité
+
 
 // DCT : deux boucles for imbriquées (float ou double)
 
