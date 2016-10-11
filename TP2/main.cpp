@@ -59,12 +59,12 @@ CImg<double> applyDctOnBlock(CImg<unsigned char> block){
     return dctBlock;
 }
 
-CImg<double> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
+CImg<unsigned char> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
     // init vars
     int step = dctBlock.width(); // step = width or height of block
     double Ci,Cj;
     double total, sub_total, sub_sub_total;
-    CImg<double> block(step,step,1,1,0);
+    CImg<unsigned char> block(step,step,1,1,0);
 
     // for each pixel in dctbloc in width    
     for(int x=0 ; x<step ; ++x) {
@@ -97,20 +97,21 @@ CImg<double> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
             total =  sub_total;
             
             // affect value to pixel in DCT block
-            block(x,y) = total;
+            block(x,y) = (unsigned char)total;
         }
     }
+
     return block;
 }
 
 
 CImg<double> JPEGEncoder(CImg<unsigned char> image, float quality)
 {
-    CImg<double> compressed_image(image.width(),image.height(),1,1,0);
+    CImg<unsigned char> compressed_image(image.width(),image.height(),1,1,0);
     //compressed_image = image;
 
     // Quantization matrix
-    /*CImg<> Q(8,8);
+    CImg<> Q(8,8);
     Q(0,0)=16;   Q(0,1)=11;   Q(0,2)=10;   Q(0,3)=16;   Q(0,4)=24;   Q(0,5)=40;   Q(0,6)=51;   Q(0,7)=61;
     Q(1,0)=12;   Q(1,1)=12;   Q(1,2)=14;   Q(1,3)=19;   Q(1,4)=26;   Q(1,5)=58;   Q(1,6)=60;   Q(1,7)=55;
     Q(2,0)=14;   Q(2,1)=13;   Q(2,2)=16;   Q(2,3)=24;   Q(2,4)=40;   Q(2,5)=57;   Q(2,6)=69;   Q(2,7)=56;
@@ -119,11 +120,12 @@ CImg<double> JPEGEncoder(CImg<unsigned char> image, float quality)
     Q(5,0)=24;   Q(5,1)=35;   Q(5,2)=55;   Q(5,3)=64;   Q(5,4)=81;   Q(5,5)=104;  Q(5,6)=113;  Q(5,7)=92;
     Q(6,0)=49;   Q(6,1)=64;   Q(6,2)=78;   Q(6,3)=87;   Q(6,4)=103;  Q(6,5)=121;  Q(6,6)=120;  Q(6,7)=101;
     Q(7,0)=72;   Q(7,1)=92;   Q(7,2)=95;   Q(7,3)=98;   Q(7,4)=112;  Q(7,5)=100;  Q(7,6)=103;  Q(7,7)=99;
-    Q *= quality;*/
+    // Quality
+    Q = Q * quality;
 
     int step = 8; // bloc 8*8
     CImg<unsigned char> image_block;
-    CImg<double> new_image_block;
+    CImg<unsigned char> new_image_block;
     CImg<double> dct_block;
 
     // for each bloc in width    
