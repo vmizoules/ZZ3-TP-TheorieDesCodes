@@ -12,6 +12,10 @@
 using namespace std;
 using namespace cimg_library;
 
+/* --- global var ---- */
+CImg<> Q;
+/* --- / global var ---- */
+
 /*--------------- DCT ----------------*/
 CImg<double> applyDctOnBlock(CImg<unsigned char> block){
     // init vars
@@ -108,21 +112,8 @@ CImg<unsigned char> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
 /*--------------- /DCT-1 ----------------*/
 
 /*--------------- JPEGENCODER ----------------*/
-CImg<double> JPEGEncoder(CImg<unsigned char> image, float quality)
+CImg<double> JPEGEncoder(CImg<unsigned char> image, double quality)
 {
-    // Quantization matrix
-    CImg<> Q(8,8);
-    Q(0,0)=16;   Q(0,1)=11;   Q(0,2)=10;   Q(0,3)=16;   Q(0,4)=24;   Q(0,5)=40;   Q(0,6)=51;   Q(0,7)=61;
-    Q(1,0)=12;   Q(1,1)=12;   Q(1,2)=14;   Q(1,3)=19;   Q(1,4)=26;   Q(1,5)=58;   Q(1,6)=60;   Q(1,7)=55;
-    Q(2,0)=14;   Q(2,1)=13;   Q(2,2)=16;   Q(2,3)=24;   Q(2,4)=40;   Q(2,5)=57;   Q(2,6)=69;   Q(2,7)=56;
-    Q(3,0)=14;   Q(3,1)=17;   Q(3,2)=22;   Q(3,3)=29;   Q(3,4)=51;   Q(3,5)=87;   Q(3,6)=80;   Q(3,7)=62;
-    Q(4,0)=18;   Q(4,1)=22;   Q(4,2)=37;   Q(4,3)=56;   Q(4,4)=68;   Q(4,5)=109;  Q(4,6)=103;  Q(4,7)=77;
-    Q(5,0)=24;   Q(5,1)=35;   Q(5,2)=55;   Q(5,3)=64;   Q(5,4)=81;   Q(5,5)=104;  Q(5,6)=113;  Q(5,7)=92;
-    Q(6,0)=49;   Q(6,1)=64;   Q(6,2)=78;   Q(6,3)=87;   Q(6,4)=103;  Q(6,5)=121;  Q(6,6)=120;  Q(6,7)=101;
-    Q(7,0)=72;   Q(7,1)=92;   Q(7,2)=95;   Q(7,3)=98;   Q(7,4)=112;  Q(7,5)=100;  Q(7,6)=103;  Q(7,7)=99;
-    // Quality
-    Q = Q * quality;
-
 	// init vars
     CImg<double> compressed_image(image.width(),image.height(),1,1,0);
     int step = 8; // bloc 8*8
@@ -139,18 +130,16 @@ CImg<double> JPEGEncoder(CImg<unsigned char> image, float quality)
             // apply dct on block
             dct_block = applyDctOnBlock(image_block);
 
-            // TODO
-            //CImg<double> quantifier
-
-
+			// quantification
+			dct_block = dct_block.div(Q).round();
 
             // affect bloc in final image
+            
             // foreach pixel in bloc width
             for(int ii=0 ; ii<step ; ++ii) {
                 // foreach pixel in bloc height
                 for(int jj=0 ; jj<step ; ++jj){
                     compressed_image(i*8+ii, j*8+jj)= dct_block(ii,jj);
-		            
                 }
             }
         }
@@ -160,21 +149,8 @@ CImg<double> JPEGEncoder(CImg<unsigned char> image, float quality)
 /*--------------- /JPEGENCODER ----------------*/
 
 /*--------------- JPEGDECODER ----------------*/
-CImg<unsigned char> JPEGDecoder(CImg<double> image, float quality)
+CImg<unsigned char> JPEGDecoder(CImg<double> image, double quality)
 {
-    // Quantization matrix
-    CImg<> Q(8,8);
-    Q(0,0)=16;   Q(0,1)=11;   Q(0,2)=10;   Q(0,3)=16;   Q(0,4)=24;   Q(0,5)=40;   Q(0,6)=51;   Q(0,7)=61;
-    Q(1,0)=12;   Q(1,1)=12;   Q(1,2)=14;   Q(1,3)=19;   Q(1,4)=26;   Q(1,5)=58;   Q(1,6)=60;   Q(1,7)=55;
-    Q(2,0)=14;   Q(2,1)=13;   Q(2,2)=16;   Q(2,3)=24;   Q(2,4)=40;   Q(2,5)=57;   Q(2,6)=69;   Q(2,7)=56;
-    Q(3,0)=14;   Q(3,1)=17;   Q(3,2)=22;   Q(3,3)=29;   Q(3,4)=51;   Q(3,5)=87;   Q(3,6)=80;   Q(3,7)=62;
-    Q(4,0)=18;   Q(4,1)=22;   Q(4,2)=37;   Q(4,3)=56;   Q(4,4)=68;   Q(4,5)=109;  Q(4,6)=103;  Q(4,7)=77;
-    Q(5,0)=24;   Q(5,1)=35;   Q(5,2)=55;   Q(5,3)=64;   Q(5,4)=81;   Q(5,5)=104;  Q(5,6)=113;  Q(5,7)=92;
-    Q(6,0)=49;   Q(6,1)=64;   Q(6,2)=78;   Q(6,3)=87;   Q(6,4)=103;  Q(6,5)=121;  Q(6,6)=120;  Q(6,7)=101;
-    Q(7,0)=72;   Q(7,1)=92;   Q(7,2)=95;   Q(7,3)=98;   Q(7,4)=112;  Q(7,5)=100;  Q(7,6)=103;  Q(7,7)=99;
-    // Quality
-    Q = Q * quality;
-
 	// init vars
     CImg<unsigned char> uncompressed_image(image.width(),image.height(),1,1,0);
     int step = 8; // bloc 8*8
@@ -188,8 +164,8 @@ CImg<unsigned char> JPEGDecoder(CImg<double> image, float quality)
             // get one bloc of 8*8 px
             dct_block = image.get_crop( i*8, j*8, i*8+(step-1), j*8+(step-1));
 
-            // TODO
-            //CImg<double> quantifier INVERSE
+            // reverse quantification
+            dct_block.mul(Q);
             
             // apply dct-1 on dctblock
             new_image_block = applyInvertedDctOnDCTBlock(dct_block);
@@ -209,25 +185,44 @@ CImg<unsigned char> JPEGDecoder(CImg<double> image, float quality)
 }
 /*--------------- /JPEGDECODER ----------------*/
 
+/*--------------- INITMATRIX ----------------*/
+void initQuantizationMatrix(double quality) {
+    // Quantization matrix
+    CImg<> Q(8,8);
+    Q(0,0)=16;   Q(0,1)=11;   Q(0,2)=10;   Q(0,3)=16;   Q(0,4)=24;   Q(0,5)=40;   Q(0,6)=51;   Q(0,7)=61;
+    Q(1,0)=12;   Q(1,1)=12;   Q(1,2)=14;   Q(1,3)=19;   Q(1,4)=26;   Q(1,5)=58;   Q(1,6)=60;   Q(1,7)=55;
+    Q(2,0)=14;   Q(2,1)=13;   Q(2,2)=16;   Q(2,3)=24;   Q(2,4)=40;   Q(2,5)=57;   Q(2,6)=69;   Q(2,7)=56;
+    Q(3,0)=14;   Q(3,1)=17;   Q(3,2)=22;   Q(3,3)=29;   Q(3,4)=51;   Q(3,5)=87;   Q(3,6)=80;   Q(3,7)=62;
+    Q(4,0)=18;   Q(4,1)=22;   Q(4,2)=37;   Q(4,3)=56;   Q(4,4)=68;   Q(4,5)=109;  Q(4,6)=103;  Q(4,7)=77;
+    Q(5,0)=24;   Q(5,1)=35;   Q(5,2)=55;   Q(5,3)=64;   Q(5,4)=81;   Q(5,5)=104;  Q(5,6)=113;  Q(5,7)=92;
+    Q(6,0)=49;   Q(6,1)=64;   Q(6,2)=78;   Q(6,3)=87;   Q(6,4)=103;  Q(6,5)=121;  Q(6,6)=120;  Q(6,7)=101;
+    Q(7,0)=72;   Q(7,1)=92;   Q(7,2)=95;   Q(7,3)=98;   Q(7,4)=112;  Q(7,5)=100;  Q(7,6)=103;  Q(7,7)=99;
+    // Quality
+    Q = Q * quality;
+}
+/*--------------- /INITMATRIX ----------------*/
 
 /*--------------- MAIN ----------------*/
 int main()
 {
+	/* init quality
+    1. - low compression
+    30. - strong compression
+    */
+    double quality=1.;
+	
+	// init matrix
+	initQuantizationMatrix(quality);
+
     // Read the image "lena.bmp"
     CImg<unsigned char> my_image("datas/lena.bmp");
-
-    // Take the luminance information 
+	// Take the luminance information 
     my_image.channel(0);
 
-	// Set quality
-    float quality=1.; // low compression
-    //float quality=30.; // strong compression
-    
     // Compress to JPEG
-    CImg<double> compressed_image = JPEGEncoder(my_image,quality);
-    
+    CImg<double> compressed_image = JPEGEncoder(my_image, quality);
     // Uncompress
-    CImg<unsigned char> uncompressed_image = JPEGDecoder(compressed_image,quality);
+    CImg<unsigned char> uncompressed_image = JPEGDecoder(compressed_image, quality);
 
     /* Display images */
     // bmp file
@@ -238,7 +233,7 @@ int main()
     CImgDisplay uncomp_disp(uncompressed_image,"Uncompressed Image");
 
 	/* Wait */
-    while (!main_disp.is_closed()); {
+    while (!main_disp.is_closed()) {
         main_disp.wait();
     }
 }
