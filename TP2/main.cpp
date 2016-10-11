@@ -41,14 +41,14 @@ CImg<double> applyDctOnBlock(CImg<unsigned char> block){
                 for(int y=0 ; y<step ; ++y) {
                     // calcul multiplication
                     sub_sub_total = block(x,y);
-                    sub_sub_total *= cos(((2*x+1)*i*M_PI)/(2*step));
-                    sub_sub_total *= sin(((2*y+1)*j*M_PI)/(2*step));
+                    sub_sub_total *= cos(((2.0*x+1.0)*i*M_PI)/(2.0*step));
+                    sub_sub_total *= cos(((2.0*y+1.0)*j*M_PI)/(2.0*step));
 
                     // get sum
                     sub_total += sub_sub_total;
                 }
             }
-            total = 2/step * Ci * Cj * sub_total;
+            total = 2.0/step * Ci * Cj * sub_total;
 
             // affect value to pixel in DCT block
             dctBlock(i,j) = sub_total;
@@ -66,37 +66,38 @@ CImg<unsigned char> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
     CImg<unsigned char> block(step,step,1,1,0);
 
     // for each pixel in dctbloc in width    
-    for(int i=0 ; i<step ; ++i) {
+    for(int x=0 ; x<step ; ++x) {
         // for each pixel in dctbloc in hight
-        for(int j=0 ; j<step ; ++j) {
+        for(int y=0 ; y<step ; ++y) {
 
-            // fix Ci and Cj values
-            Ci = 1;
-            if(i==0) {
-                Ci = M_SQRT1_2; // 1/sqrt(2)
-            }
-            Cj = 1;
-            if(j==0) {
-                Cj = M_SQRT1_2;
-            }
-            
             // run calcul
             sub_total = 0;
-            for(int x=0 ; x<step ; ++x) {
-                for(int y=0 ; y<step ; ++y) {
+            for(int i=0 ; i<step ; ++i) {
+                for(int j=0 ; j<step ; ++j) {
+
+                    // fix Ci and Cj values
+                    Ci = 1;
+                    if(i==0) {
+                        Ci = M_SQRT1_2; // 1/sqrt(2)
+                    }
+                    Cj = 1;
+                    if(j==0) {
+                        Cj = M_SQRT1_2;
+                    }
+            
                     // calcul multiplication
                     sub_sub_total = dctBlock(x,y);
-                    sub_sub_total *= cos(((2*x+1)*i*M_PI)/(2*step));
-                    sub_sub_total *= sin(((2*y+1)*j*M_PI)/(2*step));
+                    sub_sub_total *= cos(((2.0*x+1.0)*i*M_PI)/(2.0*step));
+                    sub_sub_total *= cos(((2.0*y+1.0)*j*M_PI)/(2.0*step));
 
                     // get sum
                     sub_total += sub_sub_total;
                 }
             }
-            total = 2/step * Ci * Cj * sub_total;
+            total = 2.0/step * sub_total;
 
             // affect value to pixel in DCT block
-            block(i,j) = sub_total;
+            block(x,y) = sub_total;
         }
     }
 
@@ -104,9 +105,9 @@ CImg<unsigned char> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
 }
 
 
-CImg<unsigned char> JPEGEncoder(CImg<unsigned char> image, float quality)
+CImg<double> JPEGEncoder(CImg<unsigned char> image, float quality)
 {
-    CImg<unsigned char> compressed_image(image.width(),image.height(),1,1,0);
+    CImg<double> compressed_image(image.width(),image.height(),1,1,0);
     //compressed_image = image;
 
     // Quantization matrix
@@ -134,13 +135,13 @@ CImg<unsigned char> JPEGEncoder(CImg<unsigned char> image, float quality)
             image_block = image.get_crop( i*8, j*8, i*8+(step-1), j*8+(step-1));
             
             // apply dct on block
-            dct_block = applyDctOnBlock(image_block);
+            new_image_block = applyDctOnBlock(image_block);
 
             // TODO
             //CImg<double> quantifier
 
             // apply dct-1 on dctblock
-            new_image_block = applyDctOnBlock(dct_block);
+            //new_image_block = applyDctOnBlock(dct_block);
 
             // affect bloc in final image
             // foreach pixel in bloc width
@@ -166,7 +167,8 @@ int main()
 
     float quality=1.; // low compression
     //float quality=30.; // strong compression
-    CImg<unsigned char> comp_image = JPEGEncoder(my_image,quality);
+    //CImg<unsigned char> comp_image = JPEGEncoder(my_image,quality);
+CImg<double> comp_image = JPEGEncoder(my_image,quality);
 
     // Display the bmp file
     CImgDisplay main_disp(my_image,"Initial Image");
