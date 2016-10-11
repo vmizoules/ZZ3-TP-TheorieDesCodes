@@ -112,7 +112,7 @@ CImg<unsigned char> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
 /*--------------- /DCT-1 ----------------*/
 
 /*--------------- JPEGENCODER ----------------*/
-CImg<double> JPEGEncoder(CImg<unsigned char> image, double quality)
+CImg<double> JPEGEncoder(CImg<unsigned char> image)
 {
 	// init vars
     CImg<double> compressed_image(image.width(),image.height(),1,1,0);
@@ -149,7 +149,7 @@ CImg<double> JPEGEncoder(CImg<unsigned char> image, double quality)
 /*--------------- /JPEGENCODER ----------------*/
 
 /*--------------- JPEGDECODER ----------------*/
-CImg<unsigned char> JPEGDecoder(CImg<double> image, double quality)
+CImg<unsigned char> JPEGDecoder(CImg<double> image)
 {
 	// init vars
     CImg<unsigned char> uncompressed_image(image.width(),image.height(),1,1,0);
@@ -220,16 +220,16 @@ int main()
     my_image.channel(0);
 
     // Compress to JPEG
-    CImg<double> compressed_image = JPEGEncoder(my_image, quality);
+    CImg<double> compressed_image = JPEGEncoder(my_image);
     // Uncompress
-    CImg<unsigned char> uncompressed_image = JPEGDecoder(compressed_image, quality);
+    CImg<unsigned char> uncompressed_image = JPEGDecoder(compressed_image);
 
-    /* Display images */
+    /* Display */
     // bmp file
     CImgDisplay main_disp(my_image,"Initial Image");
     // compressed (by dct)
     CImgDisplay comp_disp(compressed_image,"Compressed Image");
-    // Display the uncompressed file (by dct-1)
+    // uncompressed (by dct-1)
     CImgDisplay uncomp_disp(uncompressed_image,"Uncompressed Image");
 
 	/* Wait */
@@ -239,16 +239,15 @@ int main()
 }
 /*--------------- /MAIN ----------------*/
 
+/* ---- explications -----
 
-/* ---- explications ----- */
-
-/*
-(i,j)
-----> i
+Image coords : (i,j)
+------------------------- i
 | (0,0) (1,0)
 | (0,1)
-v
+|
 j
+
 */
 
 
