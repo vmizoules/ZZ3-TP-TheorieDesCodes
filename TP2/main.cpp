@@ -131,7 +131,7 @@ CImg<double> JPEGEncoder(CImg<unsigned char> image)
             dct_block = applyDctOnBlock(image_block);
 
 			// quantification
-			dct_block = dct_block.div(Q).round();
+			dct_block = dct_block.get_div(Q).get_round();
 
             // affect bloc in final image
             
@@ -165,7 +165,7 @@ CImg<unsigned char> JPEGDecoder(CImg<double> image)
             dct_block = image.get_crop( i*8, j*8, i*8+(step-1), j*8+(step-1));
 
             // reverse quantification
-            dct_block.mul(Q);
+            dct_block = dct_block.get_mul(Q);
             
             // apply dct-1 on dctblock
             new_image_block = applyInvertedDctOnDCTBlock(dct_block);
@@ -205,13 +205,16 @@ void initQuantizationMatrix(double quality) {
 /*--------------- MAIN ----------------*/
 int main()
 {
-	/* init quality
-    1. - low compression
-    30. - strong compression
-    */
-    double quality=1.;
+    double quality;
+
+    // Ask quality
+	cout << "Quality (1.0 low compression / 30.0 strong compression) : " << endl;
+    if (!(cin >> quality)){
+        quality = 1.0;
+        cout << "Bad value (using default : " << quality << ")" << endl;
+    }
 	
-	// init matrix
+    // Init matrix
 	initQuantizationMatrix(quality);
 
     // Read the image "lena.bmp"
