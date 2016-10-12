@@ -12,10 +12,6 @@
 using namespace std;
 using namespace cimg_library;
 
-/* --- global var ---- */
-CImg<> Q;
-/* --- / global var ---- */
-
 /*--------------- DCT ----------------*/
 CImg<double> applyDctOnBlock(CImg<unsigned char> block){
     // init vars
@@ -112,7 +108,7 @@ CImg<unsigned char> applyInvertedDctOnDCTBlock(CImg<double> dctBlock){
 /*--------------- /DCT-1 ----------------*/
 
 /*--------------- JPEGENCODER ----------------*/
-CImg<double> JPEGEncoder(CImg<unsigned char> image)
+CImg<double> JPEGEncoder(CImg<unsigned char> image, const CImg<> & Q)
 {
 	// init vars
     CImg<double> compressed_image(image.width(),image.height(),1,1,0);
@@ -149,7 +145,7 @@ CImg<double> JPEGEncoder(CImg<unsigned char> image)
 /*--------------- /JPEGENCODER ----------------*/
 
 /*--------------- JPEGDECODER ----------------*/
-CImg<unsigned char> JPEGDecoder(CImg<double> image)
+CImg<unsigned char> JPEGDecoder(CImg<double> image, const CImg<> & Q)
 {
 	// init vars
     CImg<unsigned char> uncompressed_image(image.width(),image.height(),1,1,0);
@@ -186,7 +182,7 @@ CImg<unsigned char> JPEGDecoder(CImg<double> image)
 /*--------------- /JPEGDECODER ----------------*/
 
 /*--------------- INITMATRIX ----------------*/
-void initQuantizationMatrix(double quality) {
+CImg<> initQuantizationMatrix(double quality) {
     // Quantization matrix
     CImg<> Q(8,8);
     Q(0,0)=16;   Q(0,1)=11;   Q(0,2)=10;   Q(0,3)=16;   Q(0,4)=24;   Q(0,5)=40;   Q(0,6)=51;   Q(0,7)=61;
@@ -198,7 +194,9 @@ void initQuantizationMatrix(double quality) {
     Q(6,0)=49;   Q(6,1)=64;   Q(6,2)=78;   Q(6,3)=87;   Q(6,4)=103;  Q(6,5)=121;  Q(6,6)=120;  Q(6,7)=101;
     Q(7,0)=72;   Q(7,1)=92;   Q(7,2)=95;   Q(7,3)=98;   Q(7,4)=112;  Q(7,5)=100;  Q(7,6)=103;  Q(7,7)=99;
     // Quality
-    Q = Q * quality;
+    Q *= (float)quality;
+
+    return Q;
 }
 /*--------------- /INITMATRIX ----------------*/
 
@@ -215,7 +213,7 @@ int main()
     }
 	
     // Init matrix
-	initQuantizationMatrix(quality);
+	CImg<> Q = initQuantizationMatrix(quality);
 
     // Read the image "lena.bmp"
     CImg<unsigned char> my_image("datas/lena.bmp");
@@ -223,9 +221,9 @@ int main()
     my_image.channel(0);
 
     // Compress to JPEG
-    CImg<double> compressed_image = JPEGEncoder(my_image);
+    CImg<double> compressed_image = JPEGEncoder(my_image, Q);
     // Uncompress
-    CImg<unsigned char> uncompressed_image = JPEGDecoder(compressed_image);
+    CImg<unsigned char> uncompressed_image = JPEGDecoder(compressed_image, Q);
 
     /* Display */
     // bmp file
