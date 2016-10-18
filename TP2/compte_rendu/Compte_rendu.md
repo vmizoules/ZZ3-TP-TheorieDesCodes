@@ -3,7 +3,7 @@
 
 ## Usage
 
-Pour lancer notre programme et afficher le graph résultant, on utilise les commandes suivantes :
+Pour lancer notre programme et afficher l'image résultante, on utilise les commandes suivantes :
 
 	make && ./tp2
 
@@ -18,7 +18,7 @@ Pour nettoyer le projet
 
 ### 1)
 
-L'algorithme d'encodage est réalisé lors du make (fonction JPEGENCODER)
+L'algorithme d'encodage est réalisé lors du make (fonction JPEGEncoder)
 
 ### 2)
 
