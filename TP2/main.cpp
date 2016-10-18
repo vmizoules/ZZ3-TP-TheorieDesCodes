@@ -181,6 +181,17 @@ CImg<unsigned char> JPEGDecoder(CImg<double> image, const CImg<> & Q)
 }
 /*--------------- /JPEGDECODER ----------------*/
 
+/*--------------- COMPUTEDISTORSION ----------------*/
+double computeDistorsion(const CImg<unsigned char> & imageBefore, const CImg<unsigned char> & imageAfter) {
+	double distorsion;
+	
+	// use lib -> Mean Square Error
+	distorsion = imageBefore.MSE(imageAfter);
+	
+	return distorsion;
+}
+/*--------------- /COMPUTEDISTORSION ----------------*/
+
 /*--------------- INITMATRIX ----------------*/
 CImg<> initQuantizationMatrix(double quality) {
     // Quantization matrix
@@ -232,6 +243,8 @@ int main()
     CImgDisplay comp_disp(compressed_image,"Compressed Image");
     // uncompressed (by dct-1)
     CImgDisplay uncomp_disp(uncompressed_image,"Uncompressed Image");
+	// distorsion
+	cout << "Distorsion rate : " << computeDistorsion(my_image, uncompressed_image) << endl;
 
 	/* Wait */
     while (!main_disp.is_closed()) {
