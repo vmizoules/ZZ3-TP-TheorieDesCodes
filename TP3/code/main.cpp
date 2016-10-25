@@ -15,11 +15,20 @@
  **/ 
 #define DEBUG_RF true // Debug Information: Read File
 #define DEBUG_HE true // Debug Information: Hamming Encoding
+#define DEBUG_HD true // Debug Information: Hamming Decoding
 
-#define M1 inBuffer[3] // bit de poids faible - LSB (droite)
-#define M2 inBuffer[2]
-#define M3 inBuffer[1]
-#define M4 inBuffer[0] // bit de poids fort - MSB (gauche)
+#define M1 inBuffer[0] // bit de poids faible - LSB (droite)
+#define M2 inBuffer[1]
+#define M3 inBuffer[2]
+#define M4 inBuffer[3] // bit de poids fort - MSB (gauche)
+
+#define C1 inBuffer[0] // bit de poids faible - LSB (droite)
+#define C2 inBuffer[1]
+#define C3 inBuffer[2]
+#define C4 inBuffer[3]
+#define C5 inBuffer[4]
+#define C6 inBuffer[5]
+#define C7 inBuffer[6] // bit de poids fort - MSB (gauche)
 
 using namespace std; 
 
@@ -93,6 +102,8 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 		// 0 ^ 1 = 1
 		// 1 ^ 0 = 1
 		// 1 ^ 1 = 0
+		
+		
 
 		// right bit (poids faible - LSB)
 		outBuffer[0] = M1 ^ M2 ^ M4; //m1 + m2 + m4
@@ -131,7 +142,7 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 {
 	vector<bitset<N> > decodedBitset;
 	
-	if(DEBUG_HE) {
+	if(DEBUG_HD) {
 		std::cout << "Decode : \t";
 	}
 
@@ -139,40 +150,24 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 	{
 		// Code to modify (sample)		
 		bitset<HAMMING_7> inBuffer = *i;
-		
-		/*
-		bitset<HAMMING_7> outBuffer;
-		
-		// c : codage haming / G : matrice génératrice / M : message
-		// c = G(transposé) . M
-
-		// M4 bit de poid fort (gauche), M1 bit de poid faible (droite)
-
-		// XOR :
-		// 0 ^ 0 = 0
-		// 0 ^ 1 = 1
-		// 1 ^ 0 = 1
-		// 1 ^ 1 = 0
+		bitset<N> outBuffer;
 
 		// right bit (poids faible - LSB)
-		outBuffer[0] = M1 ^ M2 ^ M4; //m1 + m2 + m4
-		outBuffer[1] = M1 ^ M3 ^ M4;
-		outBuffer[2] = M1;
-		outBuffer[3] = M2 ^ M3 ^ M4 ;
-		outBuffer[4] = M2;
-		outBuffer[5] = M3; // m3 = inBuffer[1]
-		outBuffer[6] = M4; // m4 = inBuffer[0]
+		outBuffer[0] = C3 ; // m1 = c3
+		outBuffer[1] = C5 ; // m2 = c5
+		outBuffer[2] = C6 ; // m3 = c6 = outBuffer[5]
+		outBuffer[3] = C7 ; // m4 = c7 = outBuffer[6]
 		// left bit (poids fort - MSB)
-*/
 		
-		if(DEBUG_HE) {
-			cout << " | " << inBuffer.to_string();
+		if(DEBUG_HD) {
+			cout << " | " << outBuffer.to_string();
 		}
 		
-		//encodedBitset.push_back(outBuffer);
+		// add sample to decodedBitset
+		decodedBitset.push_back(outBuffer);
 	}
 	
-	if(DEBUG_HE) {
+	if(DEBUG_HD) {
 		cout << endl;
 	}
 
