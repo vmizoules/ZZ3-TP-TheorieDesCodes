@@ -119,6 +119,66 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 	return encodedBitset;
 }
 
+vector<bitset<HAMMING_7> > & injectError(vector<bitset<HAMMING_7> > & bitsetVector)
+{
+	
+	// TODO
+
+	return bitsetVector;
+}
+
+vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
+{
+	vector<bitset<N> > decodedBitset;
+	
+	if(DEBUG_HE) {
+		std::cout << "Decode : \t";
+	}
+
+	for(vector<bitset<HAMMING_7> >::iterator i = bitsetVector.begin(); i != bitsetVector.end();++i)
+	{
+		// Code to modify (sample)		
+		bitset<HAMMING_7> inBuffer = *i;
+		
+		/*
+		bitset<HAMMING_7> outBuffer;
+		
+		// c : codage haming / G : matrice génératrice / M : message
+		// c = G(transposé) . M
+
+		// M4 bit de poid fort (gauche), M1 bit de poid faible (droite)
+
+		// XOR :
+		// 0 ^ 0 = 0
+		// 0 ^ 1 = 1
+		// 1 ^ 0 = 1
+		// 1 ^ 1 = 0
+
+		// right bit (poids faible - LSB)
+		outBuffer[0] = M1 ^ M2 ^ M4; //m1 + m2 + m4
+		outBuffer[1] = M1 ^ M3 ^ M4;
+		outBuffer[2] = M1;
+		outBuffer[3] = M2 ^ M3 ^ M4 ;
+		outBuffer[4] = M2;
+		outBuffer[5] = M3; // m3 = inBuffer[1]
+		outBuffer[6] = M4; // m4 = inBuffer[0]
+		// left bit (poids fort - MSB)
+*/
+		
+		if(DEBUG_HE) {
+			cout << " | " << inBuffer.to_string();
+		}
+		
+		//encodedBitset.push_back(outBuffer);
+	}
+	
+	if(DEBUG_HE) {
+		cout << endl;
+	}
+
+	return decodedBitset;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                     Main                                                       //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,19 +186,21 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 int main()
 {
 	vector< bitset<N> > input_data;
-	vector< bitset<HAMMING_7> > encode_data; 
+	vector< bitset<N> > decoded_data;
+	vector< bitset<HAMMING_7> > encoded_data;
+	vector< bitset<HAMMING_7> > modified_data;
 
 	// Read data to encode
 	input_data = readFile("test2.txt");
 
 	// Encode by Hamming (7,4) coding
-	encode_data = HammingEncoding(input_data);
+	encoded_data = HammingEncoding(input_data);
 
 	// Inject error
-	// TODO
+	modified_data = injectError(encoded_data);
 
 	// Decode
-	// TODO
+	decoded_data = HammingDecoding(modified_data);
 }
 
 
