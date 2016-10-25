@@ -18,8 +18,8 @@
 /**
  * Hamming (7,4)
  **/ 
-#define N 4
-#define HAMMING_7 7
+#define HAMMING_BEFORE 4
+#define HAMMING_AFTER 7
 
 /**
  * Define max error to inject per bitset
@@ -59,13 +59,13 @@ int getRand(int min, int max) {
 
 /* ----------------- readFile ----------------- */
 /**
- * vector<bitset<N> > readFile(string filename)
+ * vector<bitset<HAMMING_BEFORE> > readFile(string filename)
  * Read a file in binary and create a vector of bitset wih a width of 4 for each bitset
  * Return a vector bitset
  **/ 
-vector<bitset<N> > readFile(string filename)
+vector<bitset<HAMMING_BEFORE> > readFile(string filename)
 {
-	vector<bitset<N> > content;
+	vector<bitset<HAMMING_BEFORE> > content;
 	ifstream reader;
 	char buffer;
 	reader.open(filename.c_str(), ios::binary|ios::in);
@@ -79,8 +79,8 @@ vector<bitset<N> > readFile(string filename)
 		while(!reader.eof())
 		{
 			reader.read(&buffer, 1);
-			bitset<N> bsBufferLSB(buffer);
-			bitset<N> bsBufferMSB(buffer>>4);
+			bitset<HAMMING_BEFORE> bsBufferLSB(buffer);
+			bitset<HAMMING_BEFORE> bsBufferMSB(buffer>>4);
 			
 			content.push_back(bsBufferMSB);
 			content.push_back(bsBufferLSB);
@@ -102,8 +102,8 @@ vector<bitset<N> > readFile(string filename)
 /* ----------------- End readFile ----------------- */
 
 /* ----------------- bitsetHammingEncoding ----------------- */
-bitset<HAMMING_7> bitsetHammingEncoding(const bitset<N> & inBuffer) {
-	bitset<HAMMING_7> outBuffer;
+bitset<HAMMING_AFTER> bitsetHammingEncoding(const bitset<HAMMING_BEFORE> & inBuffer) {
+	bitset<HAMMING_AFTER> outBuffer;
 
 	// c : codage haming / G : matrice génératrice / M : message
 	// c = G(transposé) . M
@@ -131,23 +131,23 @@ bitset<HAMMING_7> bitsetHammingEncoding(const bitset<N> & inBuffer) {
 
 /* ----------------- HammingEncoding ----------------- */
 /**
- * vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
+ * vector<bitset<HAMMING_AFTER> > HammingEncoding(vector<bitset<HAMMING_BEFORE> > bitsetVector)
  * Convert a vector of bitset<4> into a hamming vector of bitset<7>
  **/ 
-vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
+vector<bitset<HAMMING_AFTER> > HammingEncoding(vector<bitset<HAMMING_BEFORE> > bitsetVector)
 {
-	vector<bitset<HAMMING_7> > encodedVectorBitset;
+	vector<bitset<HAMMING_AFTER> > encodedVectorBitset;
 	
 	if(DEBUG_HE) {
 		std::cout << "Encode :" << endl;
 	}
 
-	for(vector<bitset<N> >::iterator i = bitsetVector.begin(); i != bitsetVector.end();++i)
+	for(vector<bitset<HAMMING_BEFORE> >::iterator i = bitsetVector.begin(); i != bitsetVector.end();++i)
 	{
 		// get bitset
-		bitset<N> inBuffer = *i;
+		bitset<HAMMING_BEFORE> inBuffer = *i;
 		// encode
-		bitset<HAMMING_7> outBuffer = bitsetHammingEncoding(inBuffer);
+		bitset<HAMMING_AFTER> outBuffer = bitsetHammingEncoding(inBuffer);
 		// add sample to encodedVectorBitset
 		encodedVectorBitset.push_back(outBuffer);
 
@@ -166,25 +166,25 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 /* ----------------- End HammingEncoding ----------------- */
 
 /* ----------------- injectError ----------------- */
-vector<bitset<HAMMING_7> > injectError(vector<bitset<HAMMING_7> > & input)
+vector<bitset<HAMMING_AFTER> > injectError(vector<bitset<HAMMING_AFTER> > & input)
 {
 	// init vars
 	int pos;
-	vector<bitset<HAMMING_7> > output;
+	vector<bitset<HAMMING_AFTER> > output;
 	
 	if(DEBUG_EI) {
 		cout << endl << "-- Starting injection --" << endl;
 	}
 	
 	// for each bitset in the vector
-	for(vector<bitset<HAMMING_7> >::iterator i = input.begin(); i != input.end();++i) {
+	for(vector<bitset<HAMMING_AFTER> >::iterator i = input.begin(); i != input.end();++i) {
 		// get sample
-		bitset<HAMMING_7> buffer = *i;
+		bitset<HAMMING_AFTER> buffer = *i;
 
 		// there is between 0 and MAX_ERROR_PER_BITSET in a bitset
 		for(int i = 0 ; i < getRand(0,MAX_ERROR_PER_BITSET) ; ++i) {
 			// compute position
-			pos = getRand(0, HAMMING_7-1);
+			pos = getRand(0, HAMMING_AFTER-1);
 			// inject error in position pos
 			buffer[pos] = buffer[pos] ^ 1;
 			
@@ -200,8 +200,8 @@ vector<bitset<HAMMING_7> > injectError(vector<bitset<HAMMING_7> > & input)
 	if(DEBUG_EI) {
 		cout << "After injection :" << endl;
 	
-		for(vector<bitset<HAMMING_7> >::iterator i = output.begin(); i != output.end();++i) {
-			bitset<HAMMING_7> buff = *i;
+		for(vector<bitset<HAMMING_AFTER> >::iterator i = output.begin(); i != output.end();++i) {
+			bitset<HAMMING_AFTER> buff = *i;
 			cout << " | " << buff.to_string();
 		}
 	
@@ -213,7 +213,7 @@ vector<bitset<HAMMING_7> > injectError(vector<bitset<HAMMING_7> > & input)
 /* ----------------- End injectError ----------------- */
 
 /* ----------------- verifyBitset ----------------- */
-int verifyBitset(bitset<HAMMING_7> inBuffer)
+int verifyBitset(bitset<HAMMING_AFTER> inBuffer)
 {
 	bitset<3> position;
 	int pos = 0;
@@ -232,8 +232,8 @@ int verifyBitset(bitset<HAMMING_7> inBuffer)
 /* ----------------- End verifyBitset ----------------- */
 
 /* ----------------- bitsetHammingDecoding ----------------- */
-bitset<N> bitsetHammingDecoding(bitset<HAMMING_7> & inBuffer) {
-	bitset<N> outBuffer;
+bitset<HAMMING_BEFORE> bitsetHammingDecoding(bitset<HAMMING_AFTER> & inBuffer) {
+	bitset<HAMMING_BEFORE> outBuffer;
 
 	// verify syndrom
 	int errorPosition = verifyBitset(inBuffer);
@@ -256,20 +256,20 @@ bitset<N> bitsetHammingDecoding(bitset<HAMMING_7> & inBuffer) {
 /* ----------------- End bitsetHammingDecoding ----------------- */
 
 /* ----------------- HammingDecoding ----------------- */
-vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
+vector<bitset<HAMMING_BEFORE> > HammingDecoding(vector<bitset<HAMMING_AFTER> > & bitsetVector)
 {
-	vector<bitset<N> > decodedVectorBitset;
+	vector<bitset<HAMMING_BEFORE> > decodedVectorBitset;
 	
 	if(DEBUG_HD) {
 		cout << endl << "-- Starting decoding --" << endl;
 	}
 
-	for(vector<bitset<HAMMING_7> >::iterator i = bitsetVector.begin(); i != bitsetVector.end();++i)
+	for(vector<bitset<HAMMING_AFTER> >::iterator i = bitsetVector.begin(); i != bitsetVector.end();++i)
 	{
 		// get bitset
-		bitset<HAMMING_7> inBuffer = *i;
+		bitset<HAMMING_AFTER> inBuffer = *i;
 		// decode
-		bitset<N> outBuffer = bitsetHammingDecoding(inBuffer);
+		bitset<HAMMING_BEFORE> outBuffer = bitsetHammingDecoding(inBuffer);
 		// add sample to decodedVectorBitset
 		decodedVectorBitset.push_back(outBuffer);
 	}
@@ -277,8 +277,8 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 	if(DEBUG_HD) {
 		cout << "After decoding :" << endl;
 	
-		for(vector<bitset<N> >::iterator i = decodedVectorBitset.begin(); i != decodedVectorBitset.end();++i) {
-			bitset<N> buff = *i;
+		for(vector<bitset<HAMMING_BEFORE> >::iterator i = decodedVectorBitset.begin(); i != decodedVectorBitset.end();++i) {
+			bitset<HAMMING_BEFORE> buff = *i;
 			cout << " | " << buff.to_string();
 		}
 	
@@ -308,8 +308,8 @@ int getGlobalHammingDistance() {
 
 	// var
 	int min, max, actual, next, dist, distanceMin = 255;
-	bitset<N> mybitset;
-	bitset<HAMMING_7> actualBitset, nextBitset;
+	bitset<HAMMING_BEFORE> mybitset;
+	bitset<HAMMING_AFTER> actualBitset, nextBitset;
 
 	// compute min & max
 	min = 0; // default
@@ -325,14 +325,14 @@ int getGlobalHammingDistance() {
 	// for left between [0-14]
 	for(int i=min ; i<max ; ++i) {
 		// get hamming code for i
-		actualBitset = bitsetHammingEncoding(bitset<N>(i));
-		actual = (int) bitsetHammingEncoding(bitset<N>(i)).to_ulong();
+		actualBitset = bitsetHammingEncoding(bitset<HAMMING_BEFORE>(i));
+		actual = (int) bitsetHammingEncoding(bitset<HAMMING_BEFORE>(i)).to_ulong();
 		
 		// for right between [i-15]
 		for(int j=i+1 ; j<(max+1) ; ++j) {
 			// hamming code for j
-			nextBitset = bitsetHammingEncoding(bitset<N>(j));
-			next = (int) bitsetHammingEncoding(bitset<N>(j)).to_ulong();
+			nextBitset = bitsetHammingEncoding(bitset<HAMMING_BEFORE>(j));
+			next = (int) bitsetHammingEncoding(bitset<HAMMING_BEFORE>(j)).to_ulong();
 			
 			// compute distance between actual and next
 			dist = getHammingDistBetweenInt(actual, next);
@@ -362,10 +362,10 @@ int getGlobalHammingDistance() {
 
 int main()
 {
-	vector< bitset<N> > input_data;
-	vector< bitset<N> > decoded_data;
-	vector< bitset<HAMMING_7> > encoded_data;
-	vector< bitset<HAMMING_7> > modified_data;
+	vector< bitset<HAMMING_BEFORE> > input_data;
+	vector< bitset<HAMMING_BEFORE> > decoded_data;
+	vector< bitset<HAMMING_AFTER> > encoded_data;
+	vector< bitset<HAMMING_AFTER> > modified_data;
 	int distance;
 
 	// Read data to encode
@@ -382,7 +382,7 @@ int main()
 	
 	// Hamming Distance
 	distance = getGlobalHammingDistance();
-	cout << endl << "Distance of Hamming code (" << HAMMING_7 << "," << N <<  ") : " << distance << endl;
+	cout << endl << "Distance of Hamming code (" << HAMMING_AFTER << "," << HAMMING_BEFORE <<  ") : " << distance << endl;
 }
 
 
