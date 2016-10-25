@@ -30,8 +30,9 @@ vector<bitset<N> > readFile(string filename)
 	char buffer;
 	reader.open(filename.c_str(), ios::binary|ios::in);
 
-	if(DEBUG_RF)
+	if(DEBUG_RF) {
 		cout << "Read : \t";
+	}
 
 	if(reader != NULL && reader.is_open())
 	{
@@ -44,16 +45,16 @@ vector<bitset<N> > readFile(string filename)
 			content.push_back(bsBufferMSB);
 			content.push_back(bsBufferLSB);
 	
-			if(DEBUG_RF)
-			{
+			if(DEBUG_RF) {
 				cout << " |" << bsBufferMSB.to_string();
 				cout << " |" << bsBufferLSB.to_string();
 			}
 		}
 	}
 	
-	if(DEBUG_RF)
+	if(DEBUG_RF) {
 		cout << endl;
+	}
 
 	reader.close();
 	return content;
@@ -67,9 +68,10 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 {
 	vector<bitset<HAMMING_7> > encodedBitset;
 	
-	if(DEBUG_HE)
+	if(DEBUG_HE) {
 		std::cout << "Encode : \t";
-		
+	}
+
 	for(vector<bitset<N> >::iterator i = bitsetVector.begin(); i != bitsetVector.end();++i)
 	{
 		// Code to modify (sample)		
@@ -85,15 +87,17 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 		outBuffer[5] = 0;
 		outBuffer[6] = 0;
 		
-		if(DEBUG_HE)
+		if(DEBUG_HE) {
 			cout << " | " << outBuffer.to_string();
+		}
 		
 		encodedBitset.push_back(outBuffer);
 	}
 	
-	if(DEBUG_HE)
+	if(DEBUG_HE) {
 		cout << endl;
-	
+	}
+
 	return encodedBitset;
 }
 
@@ -103,21 +107,20 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 
 int main()
 {
- vector< bitset<N> > input_data;
- vector< bitset<HAMMING_7> > encode_data; 
+	vector< bitset<N> > input_data;
+	vector< bitset<HAMMING_7> > encode_data; 
 
- // Read data to encode
- input_data = readFile("test.txt");
- 
- // Encode by Hamming (7,4) coding
- encode_data = HammingEncoding(input_data);
- 
- // Inject error
- // TODO
+	// Read data to encode
+	input_data = readFile("test.txt");
 
- // Decode
- // TODO
+	// Encode by Hamming (7,4) coding
+	encode_data = HammingEncoding(input_data);
 
+	// Inject error
+	// TODO
+
+	// Decode
+	// TODO
 }
 
 
