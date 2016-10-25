@@ -7,14 +7,6 @@
 #include <time.h> 
 
 /**
- * Hamming (7,4)
- **/ 
-#define N 4
-#define HAMMING_7 7
-
-#define MAX_ERROR_PER_BITSET 1
-
-/**
  * Debug macros
  **/ 
 #define DEBUG_RF true // Debug Information: Read File
@@ -23,6 +15,20 @@
 #define DEBUG_EI true // Debug Information: Error Injection
 #define DEBUG_CD true // Debug Information: Code Distance
 
+/**
+ * Hamming (7,4)
+ **/ 
+#define N 4
+#define HAMMING_7 7
+
+/**
+ * Define max error to inject per bitset
+ **/ 
+#define MAX_ERROR_PER_BITSET 1
+
+/**
+ * Helper
+ **/ 
 #define M1 inBuffer[0] // bit de poids faible - LSB (droite)
 #define M2 inBuffer[1]
 #define M3 inBuffer[2]
@@ -40,6 +46,7 @@ using namespace std;
 
 bool randInitialized = false;
 
+/* ----------------- getRand ----------------- */
 int getRand(int min, int max) {
 	if(! randInitialized) {
 		srand (time(NULL));
@@ -48,8 +55,9 @@ int getRand(int min, int max) {
 
 	return rand() % (max+1) + min;
 }
+/* ----------------- End getRand ----------------- */
 
-
+/* ----------------- readFile ----------------- */
 /**
  * vector<bitset<N> > readFile(string filename)
  * Read a file in binary and create a vector of bitset wih a width of 4 for each bitset
@@ -91,7 +99,9 @@ vector<bitset<N> > readFile(string filename)
 	reader.close();
 	return content;
 }
+/* ----------------- End readFile ----------------- */
 
+/* ----------------- bitsetHammingEncoding ----------------- */
 bitset<HAMMING_7> bitsetHammingEncoding(const bitset<N> & inBuffer) {
 	bitset<HAMMING_7> outBuffer;
 
@@ -117,7 +127,9 @@ bitset<HAMMING_7> bitsetHammingEncoding(const bitset<N> & inBuffer) {
 
 	return outBuffer;
 }
+/* ----------------- End bitsetHammingEncoding ----------------- */
 
+/* ----------------- HammingEncoding ----------------- */
 /**
  * vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
  * Convert a vector of bitset<4> into a hamming vector of bitset<7>
@@ -151,7 +163,9 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 
 	return encodedVectorBitset;
 }
+/* ----------------- End HammingEncoding ----------------- */
 
+/* ----------------- injectError ----------------- */
 vector<bitset<HAMMING_7> > injectError(vector<bitset<HAMMING_7> > & input)
 {
 	// init vars
@@ -196,7 +210,9 @@ vector<bitset<HAMMING_7> > injectError(vector<bitset<HAMMING_7> > & input)
 	
 	return output;
 }
+/* ----------------- End injectError ----------------- */
 
+/* ----------------- verifyBitset ----------------- */
 int verifyBitset(bitset<HAMMING_7> inBuffer)
 {
 	bitset<3> position;
@@ -213,7 +229,9 @@ int verifyBitset(bitset<HAMMING_7> inBuffer)
 
 	return pos;
 }
+/* ----------------- End verifyBitset ----------------- */
 
+/* ----------------- bitsetHammingDecoding ----------------- */
 bitset<N> bitsetHammingDecoding(bitset<HAMMING_7> & inBuffer) {
 	bitset<N> outBuffer;
 
@@ -235,7 +253,9 @@ bitset<N> bitsetHammingDecoding(bitset<HAMMING_7> & inBuffer) {
 
 	return outBuffer;
 }
+/* ----------------- End bitsetHammingDecoding ----------------- */
 
+/* ----------------- HammingDecoding ----------------- */
 vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 {
 	vector<bitset<N> > decodedVectorBitset;
@@ -267,9 +287,11 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 
 	return decodedVectorBitset;
 }
+/* ----------------- End HammingDecoding ----------------- */
 
-// compute Hamming distance between 2 words (converted in int)
+/* ----------------- getHammingDistBetweenInt ----------------- */
 int getHammingDistBetweenInt(int a, int b) {
+	// compute Hamming distance between 2 words (converted in int)
 	int distance = 0;
 	char valeur = a^b;
 	while(valeur) {
@@ -278,9 +300,12 @@ int getHammingDistBetweenInt(int a, int b) {
 	}
 	return distance;
 }
+/* ----------------- End getHammingDistBetweenInt ----------------- */
 
-// search minimal distance in all words possible
+/* ----------------- getGlobalHammingDistance ----------------- */
 int getGlobalHammingDistance() {
+	// search minimal distance in all words possible
+
 	// var
 	int min, max, actual, next, dist, distanceMin = 255;
 	bitset<N> mybitset;
@@ -329,6 +354,7 @@ int getGlobalHammingDistance() {
 	
 	return distanceMin;
 }
+/* ----------------- End getGlobalHammingDistance ----------------- */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                     Main                                                       //
