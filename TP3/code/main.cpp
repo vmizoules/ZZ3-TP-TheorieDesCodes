@@ -21,6 +21,7 @@
 #define DEBUG_HE true // Debug Information: Hamming Encoding
 #define DEBUG_HD true // Debug Information: Hamming Decoding
 #define DEBUG_EI true // Debug Information: Error Injection
+#define DEBUG_CD true // Debug Information: Code Distance
 
 #define M1 inBuffer[0] // bit de poids faible - LSB (droite)
 #define M2 inBuffer[1]
@@ -208,7 +209,7 @@ int verifyBitset(bitset<HAMMING_7> inBuffer)
 	// right bit (poids faible - LSB)
 
 	// convert bitset to int
-	pos = (int) (position.to_ulong()) ;
+	pos = (int) (position.to_ulong());
 
 	return pos;
 }
@@ -267,6 +268,67 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 	return decodedVectorBitset;
 }
 
+// compute Hamming distance between 2 words (converted in int)
+int getHammingDistBetweenInt(int a, int b) {
+	int distance = 0;
+	char valeur = a^b;
+	while(valeur) {
+		++distance; 
+		valeur &= valeur - 1;
+	}
+	return distance;
+}
+
+// search minimal distance in all words possible
+int getGlobalHammingDistance() {
+	// var
+	int min, max, actual, next, dist, distanceMin = 255;
+	bitset<N> mybitset;
+	bitset<HAMMING_7> actualBitset, nextBitset;
+
+	// compute min & max
+	min = 0; // default
+	// set all bits to 1 in mybitset
+	mybitset.set();
+	// get value
+	max = (int) mybitset.to_ulong();
+
+	if(DEBUG_CD) {
+		cout << endl << "-- Starting computing hamming distance --" << endl;
+	}
+
+	// for left between [0-14]
+	for(int i=min ; i<max ; ++i) {
+		// get hamming code for i
+		actualBitset = bitsetHammingEncoding(bitset<N>(i));
+		actual = (int) bitsetHammingEncoding(bitset<N>(i)).to_ulong();
+		
+		// for right between [i-15]
+		for(int j=i+1 ; j<(max+1) ; ++j) {
+			// hamming code for j
+			nextBitset = bitsetHammingEncoding(bitset<N>(j));
+			next = (int) bitsetHammingEncoding(bitset<N>(j)).to_ulong();
+			
+			// compute distance between actual and next
+			dist = getHammingDistBetweenInt(actual, next);
+			if(dist < distanceMin) {
+				distanceMin = dist;
+			}
+			
+			if(DEBUG_CD) {
+				cout << actualBitset.to_string() << " vs " << nextBitset.to_string() << " | dist -> " << dist << endl;
+			}
+		}
+
+	}
+	
+	if(DEBUG_CD) {
+		cout << "-- End compute hamming distance --" << endl;
+	}
+
+	
+	return distanceMin;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                     Main                                                       //
@@ -278,6 +340,7 @@ int main()
 	vector< bitset<N> > decoded_data;
 	vector< bitset<HAMMING_7> > encoded_data;
 	vector< bitset<HAMMING_7> > modified_data;
+	int distance;
 
 	// Read data to encode
 	input_data = readFile("input2.txt");
@@ -291,12 +354,9 @@ int main()
 	// Decode
 	decoded_data = HammingDecoding(modified_data);
 	
-
-	//bitset<N> mybitset(5); // 0101
-	
-
-	
-	
+	// Hamming Distance
+	distance = getGlobalHammingDistance();
+	cout << endl << "Distance of Hamming code (" << HAMMING_7 << "," << N <<  ") : " << distance << endl;
 }
 
 
