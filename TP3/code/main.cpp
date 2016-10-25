@@ -95,16 +95,13 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 		// c : codage haming / G : matrice génératrice / M : message
 		// c = G(transposé) . M
 
-		// M4 bit de poid fort (gauche), M1 bit de poid faible (droite)
-
 		// XOR :
 		// 0 ^ 0 = 0
 		// 0 ^ 1 = 1
 		// 1 ^ 0 = 1
 		// 1 ^ 1 = 0
 		
-		
-
+		// transfert bit to outBuffer
 		// right bit (poids faible - LSB)
 		outBuffer[0] = M1 ^ M2 ^ M4; //m1 + m2 + m4
 		outBuffer[1] = M1 ^ M3 ^ M4;
@@ -138,6 +135,27 @@ vector<bitset<HAMMING_7> > & injectError(vector<bitset<HAMMING_7> > & bitsetVect
 	return bitsetVector;
 }
 
+int verifyBitset(bitset<HAMMING_7> inBuffer)
+{
+	bitset<3> position;
+	int pos = 0;
+	
+	// inject error in first bit
+	//inBuffer[0] = 0;
+	// TODO : REMOVE IT
+	
+	// right bit (poids faible - LSB)
+	position[0] = C4 ^ C5 ^ C6 ^ C7;
+	position[1] = C2 ^ C3 ^ C6 ^ C7;
+	position[2] = C1 ^ C3 ^ C5 ^ C7;
+	// left bit (poids fort - MSB)
+
+	// convert bitset to int
+	pos = (int) (position.to_ulong()) ;
+
+	return pos;
+}
+
 vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 {
 	vector<bitset<N> > decodedBitset;
@@ -152,6 +170,11 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 		bitset<HAMMING_7> inBuffer = *i;
 		bitset<N> outBuffer;
 
+		// verify syndrom
+		int errorPosition = verifyBitset(inBuffer);
+		cout << endl << "position :" << errorPosition << endl;
+		
+		// transfert bit to outBuffer		
 		// right bit (poids faible - LSB)
 		outBuffer[0] = C3 ; // m1 = c3
 		outBuffer[1] = C5 ; // m2 = c5
@@ -173,6 +196,8 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 
 	return decodedBitset;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                     Main                                                       //
