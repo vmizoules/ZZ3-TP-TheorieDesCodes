@@ -16,6 +16,11 @@
 #define DEBUG_RF true // Debug Information: Read File
 #define DEBUG_HE true // Debug Information: Hamming Encoding
 
+#define M1 inBuffer[3]
+#define M2 inBuffer[2]
+#define M3 inBuffer[1]
+#define M4 inBuffer[0]
+
 using namespace std; 
 
 /**
@@ -77,15 +82,20 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 		// Code to modify (sample)		
 		bitset<N> inBuffer = *i;
 		bitset<HAMMING_7> outBuffer;
-
-		outBuffer[0] = inBuffer[0];
-		outBuffer[1] = inBuffer[1];
-		outBuffer[2] = inBuffer[2];
-		outBuffer[3] = inBuffer[3];
 		
-		outBuffer[4] = 0;
-		outBuffer[5] = 0;
-		outBuffer[6] = 0;
+		// c : codage haming / G : matrice génératrice / M : message
+		// c = G(transposé) . M
+
+		// left bit
+		outBuffer[6] = M1 + M2 + M4;
+		outBuffer[5] = M1 + M3 + M4;
+		outBuffer[4] = M1;
+		outBuffer[3] = M2 + M3 + M4 ;
+		outBuffer[2] = M2;
+		outBuffer[1] = M3; // m3 = inBuffer[1]
+		outBuffer[0] = M4; // m4 = inBuffer[0]
+		// right bit		
+
 		
 		if(DEBUG_HE) {
 			cout << " | " << outBuffer.to_string();
