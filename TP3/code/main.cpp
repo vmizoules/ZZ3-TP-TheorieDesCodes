@@ -77,8 +77,8 @@ vector<bitset<N> > readFile(string filename)
 			content.push_back(bsBufferLSB);
 	
 			if(DEBUG_RF) {
-				cout << " |" << bsBufferMSB.to_string();
-				cout << " |" << bsBufferLSB.to_string();
+				cout << " | " << bsBufferMSB.to_string();
+				cout << " | " << bsBufferLSB.to_string();
 			}
 		}
 	}
@@ -89,7 +89,33 @@ vector<bitset<N> > readFile(string filename)
 
 	reader.close();
 	return content;
-} 
+}
+
+bitset<HAMMING_7> bitsetHammingEncoding(const bitset<N> & inBuffer) {
+	bitset<HAMMING_7> outBuffer;
+
+	// c : codage haming / G : matrice génératrice / M : message
+	// c = G(transposé) . M
+
+	// XOR :
+	// 0 ^ 0 = 0
+	// 0 ^ 1 = 1
+	// 1 ^ 0 = 1
+	// 1 ^ 1 = 0
+	
+	// transfert bit to outBuffer
+	// right bit (poids faible - LSB)
+	outBuffer[0] = M1 ^ M2 ^ M4; //m1 + m2 + m4
+	outBuffer[1] = M1 ^ M3 ^ M4;
+	outBuffer[2] = M1;
+	outBuffer[3] = M2 ^ M3 ^ M4 ;
+	outBuffer[4] = M2;
+	outBuffer[5] = M3; // m3 = inBuffer[1]
+	outBuffer[6] = M4; // m4 = inBuffer[0]
+	// left bit (poids fort - MSB)
+
+	return outBuffer;
+}
 
 /**
  * vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
@@ -97,7 +123,7 @@ vector<bitset<N> > readFile(string filename)
  **/ 
 vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 {
-	vector<bitset<HAMMING_7> > encodedBitset;
+	vector<bitset<HAMMING_7> > encodedVectorBitset;
 	
 	if(DEBUG_HE) {
 		std::cout << "Encode :" << endl;
@@ -105,43 +131,24 @@ vector<bitset<HAMMING_7> > HammingEncoding(vector<bitset<N> > bitsetVector)
 
 	for(vector<bitset<N> >::iterator i = bitsetVector.begin(); i != bitsetVector.end();++i)
 	{
-		// Code to modify (sample)		
+		// get bitset
 		bitset<N> inBuffer = *i;
-		bitset<HAMMING_7> outBuffer;
-		
-		// c : codage haming / G : matrice génératrice / M : message
-		// c = G(transposé) . M
+		// encode
+		bitset<HAMMING_7> outBuffer = bitsetHammingEncoding(inBuffer);
+		// add sample to encodedVectorBitset
+		encodedVectorBitset.push_back(outBuffer);
 
-		// XOR :
-		// 0 ^ 0 = 0
-		// 0 ^ 1 = 1
-		// 1 ^ 0 = 1
-		// 1 ^ 1 = 0
-		
-		// transfert bit to outBuffer
-		// right bit (poids faible - LSB)
-		outBuffer[0] = M1 ^ M2 ^ M4; //m1 + m2 + m4
-		outBuffer[1] = M1 ^ M3 ^ M4;
-		outBuffer[2] = M1;
-		outBuffer[3] = M2 ^ M3 ^ M4 ;
-		outBuffer[4] = M2;
-		outBuffer[5] = M3; // m3 = inBuffer[1]
-		outBuffer[6] = M4; // m4 = inBuffer[0]
-		// left bit (poids fort - MSB)
-
-		
+		// If debug, display result
 		if(DEBUG_HE) {
 			cout << " | " << outBuffer.to_string();
 		}
-		
-		encodedBitset.push_back(outBuffer);
 	}
 	
 	if(DEBUG_HE) {
 		cout << endl;
 	}
 
-	return encodedBitset;
+	return encodedVectorBitset;
 }
 
 vector<bitset<HAMMING_7> > injectError(vector<bitset<HAMMING_7> > & input)
@@ -206,9 +213,31 @@ int verifyBitset(bitset<HAMMING_7> inBuffer)
 	return pos;
 }
 
+bitset<N> bitsetHammingDecoding(bitset<HAMMING_7> & inBuffer) {
+	bitset<N> outBuffer;
+
+	// verify syndrom
+	int errorPosition = verifyBitset(inBuffer);
+	if(errorPosition != 0) {
+		// there is an error, let's deal with
+		inBuffer[errorPosition-1] = inBuffer[errorPosition-1] ^ 1; // inverse symbol
+		cout << "Error corrected in position : " << errorPosition << endl;
+	}
+	
+	// transfert bit to outBuffer		
+	// right bit (poids faible - LSB)
+	outBuffer[0] = C3 ; // m1 = c3
+	outBuffer[1] = C5 ; // m2 = c5
+	outBuffer[2] = C6 ; // m3 = c6 = outBuffer[5]
+	outBuffer[3] = C7 ; // m4 = c7 = outBuffer[6]
+	// left bit (poids fort - MSB)
+
+	return outBuffer;
+}
+
 vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 {
-	vector<bitset<N> > decodedBitset;
+	vector<bitset<N> > decodedVectorBitset;
 	
 	if(DEBUG_HD) {
 		cout << endl << "-- Starting decoding --" << endl;
@@ -216,34 +245,18 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 
 	for(vector<bitset<HAMMING_7> >::iterator i = bitsetVector.begin(); i != bitsetVector.end();++i)
 	{
-		// Code to modify (sample)		
+		// get bitset
 		bitset<HAMMING_7> inBuffer = *i;
-		bitset<N> outBuffer;
-
-		// verify syndrom
-		int errorPosition = verifyBitset(inBuffer);
-		if(errorPosition != 0) {
-			// there is an error, let's deal with
-			inBuffer[errorPosition-1] = inBuffer[errorPosition-1] ^ 1; // inverse symbol
-			cout << "Error corrected in position : " << errorPosition << endl;
-		}
-		
-		// transfert bit to outBuffer		
-		// right bit (poids faible - LSB)
-		outBuffer[0] = C3 ; // m1 = c3
-		outBuffer[1] = C5 ; // m2 = c5
-		outBuffer[2] = C6 ; // m3 = c6 = outBuffer[5]
-		outBuffer[3] = C7 ; // m4 = c7 = outBuffer[6]
-		// left bit (poids fort - MSB)
-		
-		// add sample to decodedBitset
-		decodedBitset.push_back(outBuffer);
+		// decode
+		bitset<N> outBuffer = bitsetHammingDecoding(inBuffer);
+		// add sample to decodedVectorBitset
+		decodedVectorBitset.push_back(outBuffer);
 	}
 	
 	if(DEBUG_HD) {
 		cout << "After decoding :" << endl;
 	
-		for(vector<bitset<N> >::iterator i = decodedBitset.begin(); i != decodedBitset.end();++i) {
+		for(vector<bitset<N> >::iterator i = decodedVectorBitset.begin(); i != decodedVectorBitset.end();++i) {
 			bitset<N> buff = *i;
 			cout << " | " << buff.to_string();
 		}
@@ -251,7 +264,7 @@ vector<bitset<N> > HammingDecoding(vector<bitset<HAMMING_7> > & bitsetVector)
 		cout << endl << "-- End decoding --" << endl;
 	}
 
-	return decodedBitset;
+	return decodedVectorBitset;
 }
 
 
