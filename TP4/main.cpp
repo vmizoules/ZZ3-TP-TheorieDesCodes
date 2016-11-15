@@ -9,10 +9,32 @@
 const int N=2;
 const int K=1;
 const int R=4;
+const int NbMot = 12;
 
 #define DEBUG
 
 using namespace std; 
+
+/* Class State */
+class State {
+	private :
+		vector< bitset<K> > input; 
+		int distance;
+        int difference;
+        bitset<R> state_name ;  
+    
+    public :
+        State () {}
+        State (vector< bitset<K> > in, int dist, int diff, bitset<R> name)
+            : input(in),
+            distance(dist),
+            difference(diff),
+            state_name(name)
+            {}
+
+};
+
+
 
 ////////////////////////////////////////////////////////////
 //      template<int bits> bitset<bits> randBitset()      //
@@ -55,10 +77,10 @@ vector< bitset<N> > GSM_code(vector< bitset<K> > mess)
     #endif
 
     for (vector<bitset<K> >::iterator it = mess.begin(); it != mess.end(); ++it) {
-        reg = reg<<1; // decaler registre
+        reg = reg<<1; // register shift
         reg.set(0,(*it).count());
 
-        g0 = (reg&G0).count()%2; // addition modulo 2
+        g0 = (reg&G0).count()%2; // modulo 2 addition
         g1 = (reg&G1).count()%2;
 
         cod_out.reset();
@@ -103,12 +125,32 @@ vector< bitset<N> >  GSM_transmission(vector< bitset<N> > mess_cod)
 
 vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
 {
-
+    // init vars
     vector< bitset<K> > mess_dec;
-    //list< vector >
+    vector< State > state_list;
 
+    //list< vector > ???
 
+    // initialize decoding process
+    
+    // first state
+    State first_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));// state: 0000
+    
+    state_list.push_back(first_state);
+
+ 
+    // deal with others states
+    // ...
     //TODO: Code here
+    // ..
+   
+    // end -> it stays only 1 state    
+    // read input attribut
+    
+    
+
+
+
 
     /////////// TO DELETE AND MODIFY ///////////
     for(unsigned int i=0;i<mess_tra.size();++i) {
@@ -125,8 +167,6 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
 
 int main()
 {
-    int NbMot = 12;
-
     vector< bitset<K> > mess;
     vector< bitset<N> > mess_cod;
     vector< bitset<N> > mess_tra;
@@ -135,9 +175,9 @@ int main()
     // Random initialization message
     srand( (unsigned)time( NULL ) );
     for(int i=0;i<NbMot;++i)
-    mess.push_back(randBitset<K>());
+        mess.push_back(randBitset<K>());
     for(int i=0;i<R;++i)
-    mess.push_back(bitset<K>(0));
+        mess.push_back(bitset<K>(0));
 
     // Coding of the message => mess_cod
     mess_cod = GSM_code(mess);
