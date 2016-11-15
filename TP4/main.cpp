@@ -2,6 +2,8 @@
 #include <fstream>
 #include <string>        
 #include <vector>
+#include <map>
+#include <exception>
 #include <bitset>        
 #include <cstdlib>
 #include <ctime>
@@ -13,27 +15,7 @@ const int NbMot = 12;
 
 #define DEBUG
 
-using namespace std; 
-
-/* Class State */
-class State {
-	private :
-		vector< bitset<K> > input; 
-		int distance;
-        int difference;
-        bitset<R> state_name ;  
-    
-    public :
-        State () {}
-        State (vector< bitset<K> > in, int dist, int diff, bitset<R> name)
-            : input(in),
-            distance(dist),
-            difference(diff),
-            state_name(name)
-            {}
-
-};
-
+using namespace std;
 
 
 ////////////////////////////////////////////////////////////
@@ -117,6 +99,82 @@ vector< bitset<N> >  GSM_transmission(vector< bitset<N> > mess_cod)
     return mess_tra;
 }
 
+/////////////////////////////////////////////////////////////////////////
+//                                                                     //
+// 						        Other		       					   //
+//                                                                     //
+/////////////////////////////////////////////////////////////////////////
+
+/* Class State */
+class State {
+	private :
+		vector< bitset<K> > input; 
+		int distance;
+        int difference;
+        bitset<R> state_name ;  
+    
+    public :
+        State () {}
+        State (vector< bitset<K> > in, int dist, int diff, bitset<R> name)
+            : input(in),
+            distance(dist),
+            difference(diff),
+            state_name(name)
+            {}
+        // getter / setter
+        bitset<R> getStateName() const {return state_name;}
+        vector< bitset<K> > getInput() const {return input;}
+        void addInputValue(int value) {
+			input.push_back(bitset<K>(value));
+		}
+
+		// other
+		bitset<N> getResultByEntry(int entry) {
+			bitset<R+1> G0(25);
+			bitset<R+1> G1(27); 
+			bitset<R+1> reg;
+			
+			reg = bitset<R+1>(state_name.to_ulong());
+			reg = reg<<1; // move to left
+			reg.set(0, entry); // entry at right (pos 0)
+			
+			int g0 = (reg&G0).count()%2; // modulo 2 addition
+			int g1 = (reg&G1).count()%2;
+			
+			bitset<N> out;
+			out.set(0,g0);
+			out.set(1,g1);
+			
+			return out;
+		}
+		bitset<R> getNextStateNameByEntry(int entry) {
+			bitset<R> temp_state_name;
+			temp_state_name = getStateName();
+			temp_state_name = temp_state_name<<1;
+			temp_state_name.set(0, entry); // set to ENTRY(0 or 1) the first bit
+			
+			return temp_state_name;
+		}
+		
+		void display() {
+			cout << "[" << state_name << "] - input=";
+			
+			for (vector<bitset<K> >::iterator it = input.begin() ; it != input.end(); ++it) {
+				cout << *it;
+			}
+			
+			cout << " dst=" << distance << " - diff=" << difference <<  endl;
+		}
+		
+};
+
+/*
+void computeNewState(int entry) {
+
+}
+*/
+
+
 //////////////////////////////////////////////////////////////////
 // vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra) //
 //                                                              //
@@ -125,21 +183,75 @@ vector< bitset<N> >  GSM_transmission(vector< bitset<N> > mess_cod)
 
 vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
 {
-    // init vars
+    // -- init vars
     vector< bitset<K> > mess_dec;
-    vector< State > state_list;
-
-    //list< vector > ???
-
-    // initialize decoding process
+    map< unsigned long, State > state_list;
+    bitset<R> temp_state_name;
+    vector< bitset<K> > temp_input;
+    bitset<N> potential_output;
+    int temp_distance = -1;
     
+    // -- initialize decoding process
     // first state
+    State temp_state;
     State first_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));// state: 0000
+    state_list.insert(pair< unsigned long , State >(first_state.getStateName().to_ulong(),first_state)); // add first state in list
+	// actual state
+    State * actual_state = &first_state;
     
-    state_list.push_back(first_state);
-
- 
+    cout << "--------" << endl;
+    
     // deal with others states
+    for(vector< bitset<N> >::iterator it = mess_tra.begin() ; it != mess_tra.end(); ++it) {
+		
+		/*computeNewState(1);
+		computeNewState(0);*/
+		
+		
+        // -- if input bit was 1 --
+		// compute next state name
+		temp_state_name = actual_state->getNextStateNameByEntry(1);
+		// check if futur state already exists
+		if( state_list.count(temp_state_name.to_ulong()) == 1 ) {
+			// TODO competition entre les distances et si = lancer piece...
+			cout << "CAS A TRAITER" << endl;
+		} else {
+			// create new state
+			
+			temp_input = vector< bitset<K> >(actual_state->getInput());
+			temp_input.push_back(bitset<K>(1));
+			
+			potential_output = actual_state->getResultByEntry(1);
+			
+			// count distance between potential output and actual mess_tra
+			temp_distance = (potential_output^(*it)).count();
+
+			// calculer distance
+			
+			temp_state = State(temp_input, 0, temp_distance, temp_state_name);
+			//temp_state.addInputValue(1);
+			
+			actual_state->display();
+			temp_state.display();
+		}
+		
+		cout << "--------" << endl;
+        
+        
+        //actual_state->getStateName()<<1
+
+        //actual_state->input.push_back(bitset<K>(1));
+        
+
+
+        // if input bit was 0
+        // actual_state->input.push_back(bitset<K>(0));
+        
+        
+        break;
+        
+    }
+
     // ...
     //TODO: Code here
     // ..
@@ -174,10 +286,12 @@ int main()
 
     // Random initialization message
     srand( (unsigned)time( NULL ) );
-    for(int i=0;i<NbMot;++i)
+    for(int i=0;i<NbMot;++i) {
         mess.push_back(randBitset<K>());
-    for(int i=0;i<R;++i)
+    }
+    for(int i=0;i<R;++i) {
         mess.push_back(bitset<K>(0));
+    }
 
     // Coding of the message => mess_cod
     mess_cod = GSM_code(mess);
