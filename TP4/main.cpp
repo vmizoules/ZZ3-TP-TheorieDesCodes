@@ -209,55 +209,53 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 }
 
 //////////////////////////////////////////////////////////////////
-// vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra) //
+// vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message) //
 //                                                              //
 //     Convolutional decoding of a message (GSM norm)           //
 //////////////////////////////////////////////////////////////////
 
-vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
+vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 {
     // -- init vars
-    vector< bitset<K> > mess_dec;
+    vector< bitset<K> > decoded_message;
     map< unsigned long, State > state_list;
-    
-    
-    // -- initialize decoding process
-    // first state
-    
-    State first_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));// input:"" - dist:0 - diff:-1 - statename:0000
-    insertStateInList(state_list, first_state); // add first state in list
-	// actual state
     State * actual_state;
     
-    // for each group of 2 bits of mess_tra
-    for(vector< bitset<N> >::iterator it = mess_tra.begin() ; it != mess_tra.end(); ++it) {
+    // create first state - input:"" - dist:0 - diff:-1 - statename:0000
+    State first_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));
+    // add first state in list
+    insertStateInList(state_list, first_state);
+    
+    // for each group of 2 bits of transmitted_message
+    for(vector< bitset<N> >::iterator actual_msg_block_it = transmitted_message.begin() ; actual_msg_block_it != transmitted_message.end(); ++actual_msg_block_it) {
 		
+		#ifdef DEBUG
 		cout << "----group 2 bits ----" << endl;
-		
-		map< unsigned long, State >::iterator last_elt = state_list.end();
+		#endif
 		
 		// for each existing states
 		for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
-			cout << "	";
-			cout << "----1 state ----" << endl;
-			
+			// define actual state
 			actual_state = & actual_state_it->second;
+			
+			#ifdef DEBUG
+			cout << "	" << "----1 state ----" << endl;
+			#endif
 			
 			if(actual_state->isNotNew()) {
 				// compute new if input bit was 0
-				computeNewState(state_list, actual_state, *it, 0);
+				computeNewState(state_list, actual_state, *actual_msg_block_it, 0);
 				// compute new if input bit was 1 
-				computeNewState(state_list, actual_state, *it, 1);
+				computeNewState(state_list, actual_state, *actual_msg_block_it, 1);
 			}
 			
-			cout << "		";
-			actual_state->display();
-			cout << "	";
-			cout << "----end 1 state ----" << endl;
+			#ifdef DEBUG
+			cout << "		"; actual_state->display();
+			#endif
 			
 		}
 		
-		// for each state
+		// for each state, update distance & remove "new" flag
         for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
 			actual_state = & actual_state_it->second;
 			// update distance
@@ -266,32 +264,15 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
 			actual_state->setNotNew();
 			
 		}
-		
-		cout << "----end group 2 bits ----" << endl;
         
-        
-        //actual_state->getStateName()<<1
-
-        //actual_state->input.push_back(bitset<K>(1));
-        
-
-
-        // if input bit was 0
-        // actual_state->input.push_back(bitset<K>(0));
-        
-       
         
     }
 
-    // ...
-    //TODO: Code here
-    // ..
    
     // end -> it stays only 1 state    
     // read input attribut
     
     
-
 
 
 
@@ -301,7 +282,7 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
     }
     ////////////////////////////////////////////
 
-    return mess_dec;
+    return decoded_message;
 }
 
 //////////////////////////////////////////////////////////////////
