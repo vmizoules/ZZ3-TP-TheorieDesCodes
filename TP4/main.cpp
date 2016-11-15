@@ -108,7 +108,8 @@ vector< bitset<N> >  GSM_transmission(vector< bitset<N> > mess_cod)
 /* Class State */
 class State {
 	private :
-		vector< bitset<K> > input; 
+		vector< bitset<K> > input;
+		vector< bitset<K> > old_input;
 		int distance;
         int difference;
         bitset<R> state_name ;
@@ -134,6 +135,11 @@ class State {
 				input.push_back(*it);
 			}
 		}
+		
+		vector< bitset<K> > getOldInput() const {return old_input;}
+        void updateOldInput() {
+			old_input = input;
+		}
         
         void addInputValue(int value) {
 			input.push_back(bitset<K>(value));
@@ -150,7 +156,7 @@ class State {
 		void setNotNew() {is_new = false;}
 
 		// other
-		bitset<N> getResultByEntry(int entry) {
+		bitset<N> getResultByEntry(int entry) const {
 			bitset<R+1> G0(25);
 			bitset<R+1> G1(27); 
 			bitset<R+1> reg;
@@ -197,18 +203,28 @@ State * getStateFromNumber(map< unsigned long, State > & state_list, bitset<R> s
 	return & state_list.at(state_name.to_ulong());
 }
 
-void updateDistanceAndDifference(State * & state)
+void updateState(State * & state)
 {
 	state->setDistance( state->getDistance() + state->getDifference() );
 	state->setDifference(-1);
+	state->setNotNew();
+	state->updateOldInput();
+}
+
+int computeDifference(const State * actual_state, bitset<N> actual_encoded_entry, int entry) {
+	// compute potential output
+	bitset<N> potential_output = actual_state->getResultByEntry(entry);
+	// count distance between potential output and actual transmitted_message
+	int difference = (potential_output^actual_encoded_entry).count();
+	
+	return difference;
 }
 
 void computeNewState(map< unsigned long, State > & state_list, State * actual_state, bitset<N> actual_encoded_entry, int entry)
 {
 	// init vars
-	bitset<N> potential_output;
-	int difference;
 	State * old_state = actual_state;
+	int difference;
 	
 	// compute next state name
 	bitset<R> temp_state_name = actual_state->getNextStateNameByEntry(entry);
@@ -221,25 +237,24 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 		
 		// if diff == -1
 		if(actual_state->getDifference() == -1) {
-			// compute potential output
-			potential_output = actual_state->getResultByEntry(entry);
-			// count distance between potential output and actual mess_tra
-			difference = (potential_output^actual_encoded_entry).count();
-			
+			#ifdef FULL_DEBUG
+			cout << "			diff==-1" << endl;
+			#endif
+			// compute difference
+			difference = computeDifference(actual_state, actual_encoded_entry, entry);
 			// set difference
 			actual_state->setDifference(difference);
 			// normal processing
 			actual_state->addInputValue(entry);
 		} else {
+			#ifdef FULL_DEBUG
+			cout << "			diff!=-1" << endl;
+			#endif
 			//-- compute old dst+diff
 			int old_total_dst = actual_state->getDistance() + actual_state->getDifference();
 			
 			//--  compute new dst+diff
-			// compute potential output
-			potential_output = actual_state->getResultByEntry(entry);
-			// count distance between potential output and actual mess_tra
-			difference = (potential_output^actual_encoded_entry).count();
-			
+			difference = computeDifference(actual_state, actual_encoded_entry, entry);
 			int new_total_dst = old_state->getDistance() + difference;
 			
 			if(old_total_dst < new_total_dst) {
@@ -247,7 +262,7 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 				// because the other path have a better total distance
 			} else {
 				// replace data (input, dist, diff)
-				actual_state->setInput(old_state->getInput()); // WARNING: pas sûr que ça copie bien :-/
+				actual_state->setInput(old_state->getOldInput());
 				actual_state->addInputValue(entry);
 				
 				actual_state->setDistance(old_state->getDistance());
@@ -275,18 +290,23 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 					// setter input
 					// setter distance
 					// setter difference
+					
+					
+		#ifdef FULL_DEBUG
+			cout << "			"; actual_state->display();
+		#endif
 				
 	} else {
+		#ifdef FULL_DEBUG
+			cout << "			create new state" << endl;
+		#endif
 		// create new state
 
 		// copy input
-		vector< bitset<K> > temp_input = vector< bitset<K> >(actual_state->getInput());
+		vector< bitset<K> > temp_input = vector< bitset<K> >(actual_state->getOldInput());
 		
-		// compute potential output
-		potential_output = actual_state->getResultByEntry(entry);
-		
-		// count distance between potential output and actual mess_tra
-		difference = (potential_output^actual_encoded_entry).count();
+		// compute difference
+		difference = computeDifference(actual_state, actual_encoded_entry, entry);
 		
 		State temp_state = State(temp_input, 0, difference, temp_state_name);
 		// add entry in input
@@ -294,10 +314,14 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 		
 		// insert in the list
 		insertStateInList(state_list, temp_state);
+		
+		#ifdef FULL_DEBUG
+			cout << "			"; temp_state.display();
+		#endif
 	}
 	
 	
-	cout << "			"; actual_state->display();
+	
 
 }
 
@@ -332,10 +356,10 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			// define actual state
 			actual_state = & actual_state_it->second;
 			
-			#ifdef DEBUG
+			/*#ifdef DEBUG
 			cout << "	" << "----1 state ----" << endl;
 			cout << "		"; actual_state->display();
-			#endif
+			#endif*/
 			
 			if(actual_state->isNotNew()) {
 				// compute new if input bit was 0
@@ -344,9 +368,7 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 				computeNewState(state_list, actual_state, *actual_msg_block_it, 1);
 			}
 			
-			#ifdef DEBUG
-			cout << "		"; actual_state->display();
-			#endif
+
 			
 		}
 		
@@ -354,11 +376,13 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
         for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
 			actual_state = & actual_state_it->second;
 			
-			// update distance
-			updateDistanceAndDifference(actual_state);
-			// set to normal
-			actual_state->setNotNew();
+			// update state
+			updateState(actual_state);
 			
+			#ifdef DEBUG
+			cout << "	" << "----1 state ----" << endl;
+			cout << "		"; actual_state->display();
+			#endif
 		}
         
         
