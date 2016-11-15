@@ -108,7 +108,7 @@ vector< bitset<N> >  GSM_transmission(vector< bitset<N> > mess_cod)
 
 /* Class State */
 class State {
-	private :
+	private:
 		vector< bitset<K> > input;
 		vector< bitset<K> > old_input;
 		int distance;
@@ -116,7 +116,7 @@ class State {
         bitset<R> state_name ;
         bool is_new;
     
-    public :
+    public:
         State () {}
         State (vector< bitset<K> > in, int dist, int diff, bitset<R> name)
             :
@@ -126,6 +126,7 @@ class State {
             is_new(true)
             {
 				setInput(in);
+				updateOldInput();
 			}
         // getter / setter
         bitset<R> getStateName() const {return state_name;}
