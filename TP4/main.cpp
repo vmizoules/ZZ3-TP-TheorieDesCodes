@@ -107,7 +107,7 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
 {
 
  vector< bitset<K> > mess_dec;
- list< vector >
+ //list< vector >
 
  
  //TODO: Code here
