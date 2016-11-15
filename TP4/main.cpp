@@ -55,10 +55,10 @@ vector< bitset<N> > GSM_code(vector< bitset<K> > mess)
     #endif
 
     for (vector<bitset<K> >::iterator it = mess.begin(); it != mess.end(); ++it) {
-        reg = reg<<1;
+        reg = reg<<1; // decaler registre
         reg.set(0,(*it).count());
 
-        g0 = (reg&G0).count()%2;
+        g0 = (reg&G0).count()%2; // addition modulo 2
         g1 = (reg&G1).count()%2;
 
         cod_out.reset();
