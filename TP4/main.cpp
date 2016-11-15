@@ -11,7 +11,7 @@
 const int N=2;
 const int K=1;
 const int R=4;
-const int NbMot = 12;
+const int NbMot = 3;
 
 #define DEBUG
 
@@ -111,7 +111,8 @@ class State {
 		vector< bitset<K> > input; 
 		int distance;
         int difference;
-        bitset<R> state_name ;  
+        bitset<R> state_name ;
+        bool is_new;
     
     public :
         State () {}
@@ -119,7 +120,8 @@ class State {
             : input(in),
             distance(dist),
             difference(diff),
-            state_name(name)
+            state_name(name),
+            is_new(true)
             {}
         // getter / setter
         bitset<R> getStateName() const {return state_name;}
@@ -127,6 +129,9 @@ class State {
         void addInputValue(int value) {
 			input.push_back(bitset<K>(value));
 		}
+		bool isNew() const { return is_new; }
+		bool isNotNew() const { return ! is_new; }
+		void setNotNew() {is_new = false;}
 
 		// other
 		bitset<N> getResultByEntry(int entry) {
@@ -168,12 +173,40 @@ class State {
 		
 };
 
-/*
-void computeNewState(int entry) {
+void insertStateInList(map< unsigned long, State > & state_list, State new_state) {
+	state_list.insert(pair< unsigned long , State >(new_state.getStateName().to_ulong(), new_state));
+}
+
+void computeNewState(map< unsigned long, State > & state_list, State * actual_state, bitset<N> actual_encoded_entry, int entry)
+{
+	// compute next state name
+	bitset<R> temp_state_name = actual_state->getNextStateNameByEntry(entry);
+	
+	// check if futur state already exists
+	if( state_list.count(temp_state_name.to_ulong()) == 1 ) {
+		// TODO competition entre les distances et si = lancer piece...
+		cout << "			CAS A TRAITER - " << temp_state_name << endl;
+	} else {
+		// create new state
+
+		// copy input
+		vector< bitset<K> > temp_input = vector< bitset<K> >(actual_state->getInput());
+		
+		// compute potential output
+		bitset<N> potential_output = actual_state->getResultByEntry(entry);
+		
+		// count distance between potential output and actual mess_tra
+		int difference = (potential_output^actual_encoded_entry).count();
+		
+		State temp_state = State(temp_input, 0, difference, temp_state_name);
+		// add entry in input
+		temp_state.addInputValue(entry);
+		
+		// insert in the list
+		insertStateInList(state_list, temp_state);
+	}
 
 }
-*/
-
 
 //////////////////////////////////////////////////////////////////
 // vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra) //
@@ -186,56 +219,55 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
     // -- init vars
     vector< bitset<K> > mess_dec;
     map< unsigned long, State > state_list;
-    bitset<R> temp_state_name;
-    vector< bitset<K> > temp_input;
-    bitset<N> potential_output;
-    int temp_distance = -1;
+    
     
     // -- initialize decoding process
     // first state
-    State temp_state;
-    State first_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));// state: 0000
-    state_list.insert(pair< unsigned long , State >(first_state.getStateName().to_ulong(),first_state)); // add first state in list
+    
+    State first_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));// input:"" - dist:0 - diff:-1 - statename:0000
+    insertStateInList(state_list, first_state); // add first state in list
 	// actual state
-    State * actual_state = &first_state;
+    State * actual_state;
     
-    cout << "--------" << endl;
-    
-    // deal with others states
+    // for each group of 2 bits of mess_tra
     for(vector< bitset<N> >::iterator it = mess_tra.begin() ; it != mess_tra.end(); ++it) {
 		
-		/*computeNewState(1);
-		computeNewState(0);*/
+		cout << "----group 2 bits ----" << endl;
 		
+		map< unsigned long, State >::iterator last_elt = state_list.end();
 		
-        // -- if input bit was 1 --
-		// compute next state name
-		temp_state_name = actual_state->getNextStateNameByEntry(1);
-		// check if futur state already exists
-		if( state_list.count(temp_state_name.to_ulong()) == 1 ) {
-			// TODO competition entre les distances et si = lancer piece...
-			cout << "CAS A TRAITER" << endl;
-		} else {
-			// create new state
+		// for each existing states
+		for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
+			cout << "	";
+			cout << "----1 state ----" << endl;
 			
-			temp_input = vector< bitset<K> >(actual_state->getInput());
-			temp_input.push_back(bitset<K>(1));
+			actual_state = & actual_state_it->second;
 			
-			potential_output = actual_state->getResultByEntry(1);
+			if(actual_state->isNotNew()) {
+				// compute new if input bit was 0
+				computeNewState(state_list, actual_state, *it, 0);
+				// compute new if input bit was 1 
+				computeNewState(state_list, actual_state, *it, 1);
+			}
 			
-			// count distance between potential output and actual mess_tra
-			temp_distance = (potential_output^(*it)).count();
-
-			// calculer distance
-			
-			temp_state = State(temp_input, 0, temp_distance, temp_state_name);
-			//temp_state.addInputValue(1);
-			
+			cout << "		";
 			actual_state->display();
-			temp_state.display();
+			cout << "	";
+			cout << "----end 1 state ----" << endl;
+			
 		}
 		
-		cout << "--------" << endl;
+		// for each state
+        for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
+			actual_state = & actual_state_it->second;
+			// update distance
+			
+			// set to normal
+			actual_state->setNotNew();
+			
+		}
+		
+		cout << "----end group 2 bits ----" << endl;
         
         
         //actual_state->getStateName()<<1
@@ -247,8 +279,7 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > mess_tra)
         // if input bit was 0
         // actual_state->input.push_back(bitset<K>(0));
         
-        
-        break;
+       
         
     }
 
