@@ -14,6 +14,7 @@ const int R=4;
 const int NbMot = 3;
 
 #define DEBUG
+//#define FULL_DEBUG
 
 using namespace std;
 
@@ -138,7 +139,10 @@ class State {
 		
 		vector< bitset<K> > getOldInput() const {return old_input;}
         void updateOldInput() {
-			old_input = input;
+			old_input.clear();
+			for (vector<bitset<K> >::iterator it = input.begin() ; it != input.end(); ++it) {
+				old_input.push_back(*it);
+			}
 		}
         
         void addInputValue(int value) {
@@ -190,6 +194,27 @@ class State {
 				cout << *it;
 			}
 			
+			cout << " oldInput=";
+			
+			for (vector<bitset<K> >::iterator ita = old_input.begin() ; ita != old_input.end(); ++ita) {
+				cout << *ita;
+			}
+			
+			cout << " dst=" << distance << " - diff=" << difference <<  endl;
+		}
+		void display2() {
+			cout << "[" << state_name << "] - input=";
+			
+			for (vector<bitset<K> >::iterator it = getInput().begin() ; it != getInput().end(); ++it) {
+				cout << *it;
+			}
+			
+			cout << " oldInput=";
+			
+			for (vector<bitset<K> >::iterator ita = getOldInput().begin() ; ita != getOldInput().end(); ++ita) {
+				cout << *ita;
+			}
+			
 			cout << " dst=" << distance << " - diff=" << difference <<  endl;
 		}
 		
@@ -212,6 +237,10 @@ void updateState(State * & state)
 }
 
 int computeDifference(const State * actual_state, bitset<N> actual_encoded_entry, int entry) {
+	#ifdef FULL_DEBUG
+		cout << "			COMPUTE DIFFERENCE : actual_encoded_entry=" << actual_encoded_entry << " encodingresult=" << actual_state->getResultByEntry(entry) << endl;
+	#endif
+	
 	// compute potential output
 	bitset<N> potential_output = actual_state->getResultByEntry(entry);
 	// count distance between potential output and actual transmitted_message
@@ -241,7 +270,7 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			cout << "			diff==-1" << endl;
 			#endif
 			// compute difference
-			difference = computeDifference(actual_state, actual_encoded_entry, entry);
+			difference = computeDifference(old_state, actual_encoded_entry, entry);
 			// set difference
 			actual_state->setDifference(difference);
 			// normal processing
@@ -254,7 +283,7 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			int old_total_dst = actual_state->getDistance() + actual_state->getDifference();
 			
 			//--  compute new dst+diff
-			difference = computeDifference(actual_state, actual_encoded_entry, entry);
+			difference = computeDifference(old_state, actual_encoded_entry, entry);
 			int new_total_dst = old_state->getDistance() + difference;
 			
 			if(old_total_dst < new_total_dst) {
@@ -297,18 +326,10 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 		#endif
 				
 	} else {
-		#ifdef FULL_DEBUG
-			cout << "			create new state" << endl;
-		#endif
-		// create new state
-
-		// copy input
-		vector< bitset<K> > temp_input = vector< bitset<K> >(actual_state->getOldInput());
-		
 		// compute difference
-		difference = computeDifference(actual_state, actual_encoded_entry, entry);
+		difference = computeDifference(old_state, actual_encoded_entry, entry);
 		
-		State temp_state = State(temp_input, 0, difference, temp_state_name);
+		State temp_state = State(actual_state->getOldInput(), old_state->getDistance(), difference, temp_state_name);
 		// add entry in input
 		temp_state.addInputValue(entry);
 		
@@ -343,7 +364,7 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
     first_state.setNotNew();
     // add first state in list
     insertStateInList(state_list, first_state);
-    
+
     // for each group of 2 bits of transmitted_message
     for(vector< bitset<N> >::iterator actual_msg_block_it = transmitted_message.begin() ; actual_msg_block_it != transmitted_message.end(); ++actual_msg_block_it) {
 		
@@ -382,6 +403,7 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			#ifdef DEBUG
 			cout << "	" << "----1 state ----" << endl;
 			cout << "		"; actual_state->display();
+			cout << "		"; actual_state->display2();
 			#endif
 		}
         
