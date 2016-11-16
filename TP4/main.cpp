@@ -130,7 +130,7 @@ class State {
 			}
         // getter / setter
         bitset<R> getStateName() const {return state_name;}
-        vector< bitset<K> > getInput() const {return input;}
+        const vector< bitset<K> > & getInput() const {return input;}
         void setInput(vector< bitset<K> > in) {
 			input.clear();
 			for (vector<bitset<K> >::iterator it = in.begin() ; it != in.end(); ++it) {
@@ -138,7 +138,7 @@ class State {
 			}
 		}
 		
-		vector< bitset<K> > getOldInput() const {return old_input;}
+		const vector< bitset<K> > & getOldInput() const {return old_input;}
         void updateOldInput() {
 			old_input.clear();
 			for (vector<bitset<K> >::iterator it = input.begin() ; it != input.end(); ++it) {
@@ -206,13 +206,13 @@ class State {
 		void display2() {
 			cout << "[" << state_name << "] - input=";
 			
-			for (vector<bitset<K> >::iterator it = getInput().begin() ; it != getInput().end(); ++it) {
+			for (vector<bitset<K> >::const_iterator it = getInput().begin() ; it != getInput().end(); ++it) {
 				cout << *it;
 			}
 			
 			cout << " oldInput=";
 			
-			for (vector<bitset<K> >::iterator ita = getOldInput().begin() ; ita != getOldInput().end(); ++ita) {
+			for (vector<bitset<K> >::const_iterator ita = getOldInput().begin() ; ita != getOldInput().end(); ++ita) {
 				cout << *ita;
 			}
 			
