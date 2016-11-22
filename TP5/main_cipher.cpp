@@ -36,21 +36,39 @@ class Vigenere
 				}
 			}
 		}
-
-		// ADD THE VIGENERE CRYPTION
+	
+		// VIGENERE CRYPTION
 		// C = T + K
+		char textCharacter;
+		char keyCharacter;
+		for(unsigned int a = 0; a < out.length(); ++a)
+		{
+			// get key character 
+			keyCharacter = (char) this->key[a % this->key.length()];
+			textCharacter = (char) out[a];
+			out[a] = (char) ('A' + ((textCharacter + keyCharacter ) %26));
+		} 
 
 		return out;
 	}
 
 	string decrypt(string text)
 	{
-		string out;
+		string out = text;
 
-		// TO REMOVE
-		out = text;
-
-		// ADD THE VIGENERE DECRYPTION 
+		// VIGENERE DECRYPTION
+		// C = T - K
+		char textCharacter;
+		char keyCharacter;
+		for(unsigned int a = 0; a < text.length(); ++a)
+		{
+			// get key character 
+			keyCharacter = (char) this->key[a % this->key.length()];
+			textCharacter = (char) text[a];
+			out[a] = (char) ('A' + ((textCharacter - keyCharacter +26) %26));
+			
+		} 
+		cout << out << endl;
 		return out;
 	}
 };
@@ -64,22 +82,22 @@ int main()
 	//Vigenere cipher("MYKEY");
 	Vigenere cipher("algorythme");
 	// string original_en  = "Kerckhoffs's principle - A cryptosystem should be secure even if everything about the system, except the key, is public knowledge.";
-	string original_en  = "pythagore";
+	string original_en  = "pythagorepythagore";
 	string encrypted_en = cipher.encrypt(original_en);
 	string decrypted_en = cipher.decrypt(encrypted_en);
 
-	cout << original_en << endl;
+	cout << "Original Message: "  << original_en << endl;
 	cout << "Encrypted: " << encrypted_en << endl;
 	cout << "Decrypted: " << decrypted_en << endl;
 
-	string original_fr  = "Principe de Kerckhoffs - Toute la securite d'un systeme cryptographique doit reposer sur la clef et pas sur le systeme lui meme.";
+	/*string original_fr  = "Principe de Kerckhoffs - Toute la securite d'un systeme cryptographique doit reposer sur la clef et pas sur le systeme lui meme.";
 
 	string encrypted_fr = cipher.encrypt(original_fr);
 	string decrypted_fr = cipher.decrypt(encrypted_fr);
 
 	cout << original_fr << endl;
 	cout << "Encrypted: " << encrypted_fr << endl;
-	cout << "Decrypted: " << decrypted_fr << endl;
+	cout << "Decrypted: " << decrypted_fr << endl;*/
 
 }
 
