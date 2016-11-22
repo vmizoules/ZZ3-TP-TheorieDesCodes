@@ -432,6 +432,13 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 //                             MAIN                             //
 //////////////////////////////////////////////////////////////////
 
+/*
+Deux flux binaire peuvent arriver à un même état
+
+Mais deux flux binaire identiques doivent arriver sur un seul état
+*/
+
+
 int main()
 {
     vector< bitset<K> > mess;
