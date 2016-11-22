@@ -8,7 +8,12 @@
 using namespace std;
  
 typedef array<pair<char, double>, 26> FreqArray;
- 
+
+char decipher(char input, char key) {
+	return (char) ('a' + ((input - key +26) %26));
+}
+
+
 class VigenereCryptanalysis
 {
 	private:
@@ -76,55 +81,56 @@ class VigenereCryptanalysis
 			
 			// reset vars
 			nb_letter=0;
-			double nb_expected = 0;
-			double chi2 = 0.0;
-			double min_chi2 = 100000000.0;
+			double nb_expected, chi2, min_chi2;
 			char char_found;
 
 			// -- Find the Key --
 			// foreach letter of the key
 			for(int start_ind = 0 ; start_ind<key_size ; ++start_ind) {
-				
-				cout << endl<< " -- " << start_ind+1 << "eme lettre -- " << endl;
+				min_chi2 = 100000000.0;
 				
 				// foreach letter of the alphabel
-				for(char c = 'a' ; c <= 'z' ; c=(char)c+1 ) {
+				for(char potential_letter_key = 'a' ; potential_letter_key <= 'z' ; potential_letter_key=(char)potential_letter_key+1 ) {
+					// -- compute chi2 of potential letter --
 					// reset vars
 					chi2 = 0.0;
-					nb_letter=0;
-					sub_string_size = 0;
 					
-					// count letter
-					for(int ind = start_ind ; ind < input.length() ; ind = ind+key_size) {
-						// count size of sub string
-						sub_string_size++;
-						
-						// if it's the good character, increment
-						if(input[ind] == c) {
-							nb_letter++;
+					// for each letter in alphabet
+					for(char c = 'a' ; c <= 'z' ; c=(char)c+1 ) {
+						// -- compute partial chi2			
+						nb_letter=0;
+						sub_string_size = 0;
+					
+						// count letter
+						for(int ind = start_ind ; ind < input.length() ; ind = ind+key_size) {
+							// count size of sub string
+							sub_string_size++;
+							
+							// if it's the good character, increment
+							if(decipher(input[ind], potential_letter_key) == c) {
+								nb_letter++;
+							}
 						}
+					
+						// compute partial CHI2
+						nb_expected = this->targets[c - 'a'] * sub_string_size;
+						chi2 = chi2 + (nb_letter - nb_expected)*(nb_letter - nb_expected) / nb_expected;
 					}
 					
-					// compute CHI2
-					nb_expected = this->targets[c - 'a'] * sub_string_size;
-					cout << "nb_expected" << nb_expected << endl;
-					cout << "nb_letter" << nb_letter << endl;
-					chi2 = (nb_letter - nb_expected)*(nb_letter - nb_expected) / nb_expected;
-					cout << chi2 << endl;
+					// DEBUG
+					//cout << "potential letter key : " << potential_letter_key << " chi2 " << chi2 << endl;
+					
+					// keep the minimal chi2 (and associated letter)
 					if(chi2 < min_chi2){
 						min_chi2 = chi2;
-						char_found = c;
-					}					
+						//cout << "change mini letter by " << potential_letter_key << " with ki2=" << chi2 << " and miniki2=" << min_chi2 << endl;
+						char_found = potential_letter_key;
+					}
 				}
-				min_chi2 = 100000000.0;
-				cout << char_found << endl;
+				
+				cout << start_ind << "eme letter : " << char_found << endl;
 				
 			}
-			
-			
-			
-			//cout << "chi2 - " << chi2 << endl;
-			
 			
 			
 			return make_pair(result, key);
