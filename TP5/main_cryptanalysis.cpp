@@ -4,6 +4,11 @@
 #include <map>
 #include <algorithm>
 #include <array>
+#include <fstream>
+#include <streambuf>
+
+//#define DEBUG
+#define IC_THRESHOLD 0.057
 
 using namespace std;
  
@@ -19,8 +24,6 @@ class VigenereCryptanalysis
 	private:
 		array<double, 26> targets;
 		array<double, 26> sortedTargets;
-
-		// TO COMPLETE
 	 
 	public:
 		VigenereCryptanalysis(const array<double, 26>& targetFreqs) 
@@ -36,11 +39,10 @@ class VigenereCryptanalysis
 			int key_size = 0;
 			int sub_string_size, nb_letter;
 			float IC = 0.0;
-			
 			vector<float> IC_avg_list;
 			
 			// while size of key is not suffisant to have a normal IC
-			while(IC < 0.058) {
+			while(IC < IC_THRESHOLD) {
 				key_size++;
 				
 				IC = 0;
@@ -67,22 +69,23 @@ class VigenereCryptanalysis
 						IC = IC + ((float)nb_letter*((float)nb_letter-1))/((float)sub_string_size*((float)sub_string_size-1));
 					}
 				
-					// DEBUG
-					//cout << "IC for key lenght " << key_size << " start_ind " << start_ind << " - "  << IC << endl;
+					#ifdef DEBUG
+					cout << "IC for key lenght " << key_size << " start_ind " << start_ind << " - "  << IC << endl;
+					#endif
 				}
 				// compute IC avg
 				IC = IC / key_size;
 			}
 			
+			#ifdef DEBUG
 			cout << "Key lenght found - " << key_size << endl;
-			
-			string key = "ISIMA PERHAPS";
-			string result = "I CAN NOT DECRYPT THIS TEXT FOR NOW :-)" + input;
+			#endif
 			
 			// reset vars
 			nb_letter=0;
 			double nb_expected, chi2, min_chi2;
 			char char_found;
+			string key = "";
 
 			// -- Find the Key --
 			// foreach letter of the key
@@ -117,31 +120,45 @@ class VigenereCryptanalysis
 						chi2 = chi2 + (nb_letter - nb_expected)*(nb_letter - nb_expected) / nb_expected;
 					}
 					
-					// DEBUG
-					//cout << "potential letter key : " << potential_letter_key << " chi2 " << chi2 << endl;
+					#ifdef DEBUG
+					cout << "potential letter key : " << potential_letter_key << " chi2 " << chi2 << endl;
+					#endif
 					
 					// keep the minimal chi2 (and associated letter)
 					if(chi2 < min_chi2){
+						#ifdef DEBUG
+						cout << "change mini letter by " << potential_letter_key << " with ki2=" << chi2 << " and miniki2=" << min_chi2 << endl;
+						#endif
+						
 						min_chi2 = chi2;
-						//cout << "change mini letter by " << potential_letter_key << " with ki2=" << chi2 << " and miniki2=" << min_chi2 << endl;
 						char_found = potential_letter_key;
 					}
 				}
 				
-				cout << start_ind << "eme letter : " << char_found << endl;
-				
+				key+= char_found;
 			}
 			
-			
+
+			// decipher msg
+			string result = "";
+			char keyCharacter;
+			for(unsigned int a = 0; a < input.length(); ++a) {
+				// get key character 
+				keyCharacter = (char) key[a % key.length()];
+				result += decipher(input[a], keyCharacter);
+			}
+
 			return make_pair(result, key);
 		}
 };
  
-int main() 
+int main()
 {
-	//string input = "YOU HAVE TO COPY THE CIPHERTEXT FROM THE ATTACHED FILES OR FROM YOUR CIPHER ALGORITHM";
-	string input = "zbpuevpuqsdlzgllksousvpasfpddggaqwptdgptzweemqzrdjtddefekeferdprrcyndgluaowcnbptzzzrbvpssfpashpncotemhaeqrferdlrlwwertlussfikgoeuswotfdgqsyasrlnrzppdhtticfrciwurhcezrpmhtpuwiyenamrdbzyzwelzucamrptzqseqcfgdrfrhrpatsepzgfnaffisbpvblisrplzgnemswaqoxpdseehbeeksdptdttqsdddgxurwnidbdddplncsd";
-
+	string file_name="ciphertext_3.txt";
+	
+	ifstream t(file_name);
+	string input((istreambuf_iterator<char>(t)),istreambuf_iterator<char>());
+	
 	array<double, 26> english = {
 	0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228,
 	0.02015, 0.06094, 0.06966, 0.00153, 0.00772, 0.04025,
@@ -156,13 +173,13 @@ int main()
 	0.0887,  0.0744,  0.0523,  0.0128,  0.0006,  0.0053,
 	0.0026,  0.0012};
 
-	/*
+	/**/
 	VigenereCryptanalysis vc_en(english);
 	pair<string, string> output_en = vc_en.analyze(input);
 
 	cout << "Key: "  << output_en.second << endl;
 	cout << "Text: " << output_en.first << endl;
-	*/
+	/**/
 
 	/**/
 	VigenereCryptanalysis vc_fr(french);
