@@ -29,8 +29,7 @@ class VigenereCryptanalysis
 		{
 			// init vars
 			int key_size = 0;
-			int start_ind = 0;
-			int string_size, nb_letter;
+			int sub_string_size, nb_letter;
 			float IC = 0.0;
 			
 			vector<float> IC_avg_list;
@@ -39,22 +38,19 @@ class VigenereCryptanalysis
 			while(IC < 0.058) {
 				key_size++;
 				
-				// start calcul of IndexOfCoincidence at index 0
-				start_ind = 0;
-				
 				IC = 0;
 				// compute IC for this key_size and for all start_ind
-				for(start_ind = 0 ; start_ind < key_size ; ++start_ind) {
+				for(int start_ind = 0 ; start_ind < key_size ; ++start_ind) {
 					
 					// for each letter in alphabet
 					for(char c = 'a' ; c <= 'z' ; c=(char)c+1 ) {
 						// reset string size & nb_letter
-						string_size = 0;
+						sub_string_size = 0;
 						nb_letter = 0;
 						
 						// count letter and size
 						for(int ind = start_ind ; ind < input.length() ; ind = ind+key_size) {
-							string_size++;
+							sub_string_size++;
 							
 							// if it's the good character, increment
 							if(input[ind] == c) {
@@ -63,7 +59,7 @@ class VigenereCryptanalysis
 							}
 						}
 						
-						IC = IC + ((float)nb_letter*((float)nb_letter-1))/((float)string_size*((float)string_size-1));
+						IC = IC + ((float)nb_letter*((float)nb_letter-1))/((float)sub_string_size*((float)sub_string_size-1));
 					}
 				
 					// DEBUG
@@ -71,9 +67,6 @@ class VigenereCryptanalysis
 				}
 				// compute IC avg
 				IC = IC / key_size;
-				
-				// DEBUG
-				//cout << "IC for key lenght " << key_size << " - "  << IC << endl;
 			}
 			
 			cout << "Key lenght found - " << key_size << endl;
@@ -81,9 +74,59 @@ class VigenereCryptanalysis
 			string key = "ISIMA PERHAPS";
 			string result = "I CAN NOT DECRYPT THIS TEXT FOR NOW :-)" + input;
 			
-			
-			//for(char c = 'a' ; c <= 'z' ; c=(char)c+1 ) {
+			// reset vars
+			nb_letter=0;
+			double nb_expected = 0;
+			double chi2 = 0.0;
+			double min_chi2 = 100000000.0;
+			char char_found;
 
+			// -- Find the Key --
+			// foreach letter of the key
+			for(int start_ind = 0 ; start_ind<key_size ; ++start_ind) {
+				
+				cout << endl<< " -- " << start_ind+1 << "eme lettre -- " << endl;
+				
+				// foreach letter of the alphabel
+				for(char c = 'a' ; c <= 'z' ; c=(char)c+1 ) {
+					// reset vars
+					chi2 = 0.0;
+					nb_letter=0;
+					sub_string_size = 0;
+					
+					// count letter
+					for(int ind = start_ind ; ind < input.length() ; ind = ind+key_size) {
+						// count size of sub string
+						sub_string_size++;
+						
+						// if it's the good character, increment
+						if(input[ind] == c) {
+							nb_letter++;
+						}
+					}
+					
+					// compute CHI2
+					nb_expected = this->targets[c - 'a'] * sub_string_size;
+					cout << "nb_expected" << nb_expected << endl;
+					cout << "nb_letter" << nb_letter << endl;
+					chi2 = (nb_letter - nb_expected)*(nb_letter - nb_expected) / nb_expected;
+					cout << chi2 << endl;
+					if(chi2 < min_chi2){
+						min_chi2 = chi2;
+						char_found = c;
+					}					
+				}
+				min_chi2 = 100000000.0;
+				cout << char_found << endl;
+				
+			}
+			
+			
+			
+			//cout << "chi2 - " << chi2 << endl;
+			
+			
+			
 			return make_pair(result, key);
 		}
 };
