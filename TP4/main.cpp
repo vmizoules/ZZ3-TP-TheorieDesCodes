@@ -14,7 +14,7 @@ const int R=4;
 const int NbMot = 16;
 const float ErrorRate = 0.0003;
 
-//#define DEBUG
+#define DEBUG
 //#define FULL_DEBUG
 
 using namespace std;
@@ -301,7 +301,7 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			cout << "			diff!=-1" << endl;
 			#endif
 			//-- compute old dst+diff
-			int old_total_dst = actual_state->getOldDistance() + actual_state->getDifference();
+			int old_total_dst = actual_state->getDistance() + actual_state->getDifference();
 			
 			//--  compute new dst+diff
 			difference = computeDifference(old_state, actual_encoded_entry, entry);
@@ -408,15 +408,17 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
         for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
 			actual_state = & actual_state_it->second;
 			
+			/*
 			#ifdef DEBUG
 			cout << "	"; actual_state->display();
 			#endif
+			*/
 			
 			// update state
 			updateState(actual_state);
 			
 			#ifdef DEBUG
-			cout << "		apres update - "; actual_state->display();
+			cout << "		"; actual_state->display();
 			#endif
 		}
 		
