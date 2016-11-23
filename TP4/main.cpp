@@ -11,7 +11,8 @@
 const int N=2;
 const int K=1;
 const int R=4;
-const int NbMot = 10;
+const int NbMot = 20;
+const float ErrorRate = 0.05;
 
 //#define DEBUG
 //#define FULL_DEBUG
@@ -94,8 +95,17 @@ vector< bitset<N> > GSM_code(vector< bitset<K> > mess)
 vector< bitset<N> >  GSM_transmission(vector< bitset<N> > mess_cod)
 {
     vector< bitset<N> > mess_tra = mess_cod;
+    bitset<N> actual_msg_block_it;
 
-    //TODO: Code here
+	// iterate over vector
+	for(vector< bitset<N> >::iterator actual_msg_block_it = mess_tra.begin() ; actual_msg_block_it != mess_tra.end(); ++actual_msg_block_it) {
+		// get random from error rate
+		if( (1 + rand()%((int)(1/ErrorRate))) == 1 ) {
+			// replace these 2 bits by a random bitset
+			*actual_msg_block_it = randBitset<N>();
+			cout << "Insert 1 error" << endl;
+		}
+	}
 
     return mess_tra;
 }
@@ -432,6 +442,8 @@ Mais deux flux binaire identiques doivent arriver sur un seul état
 
 int main()
 {
+	srand(time(0)); // initialize random
+	
     vector< bitset<K> > mess;
     vector< bitset<N> > mess_cod;
     vector< bitset<N> > mess_tra;
