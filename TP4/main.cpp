@@ -11,10 +11,10 @@
 const int N=2;
 const int K=1;
 const int R=4;
-const int NbMot = 16;
-const float ErrorRate = 0.0003;
+const int NbMot = 20;
+const float ErrorRate = 0.1; // 0.1 <=> 1 erreur pour 10 bit transmis
 
-#define DEBUG
+//#define DEBUG
 //#define FULL_DEBUG
 
 using namespace std;
@@ -97,15 +97,17 @@ vector< bitset<N> >  GSM_transmission(vector< bitset<N> > mess_cod)
     vector< bitset<N> > mess_tra = mess_cod;
     bitset<N> actual_msg_block_it;
 
+	cout << "Transmitting..." << endl;
 	// iterate over vector
 	for(vector< bitset<N> >::iterator actual_msg_block_it = mess_tra.begin() ; actual_msg_block_it != mess_tra.end(); ++actual_msg_block_it) {
 		// get random from error rate
 		if( (1 + rand()%((int)(1/ErrorRate))) == 1 ) {
 			// replace these 2 bits by a random bitset
 			*actual_msg_block_it = randBitset<N>();
-			cout << "Insert 1 error" << endl;
+			cout << "	Insert 1 error" << endl;
 		}
 	}
+	cout << "End of transmition!" << endl;
 
     return mess_tra;
 }
@@ -344,10 +346,6 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			cout << "			"; temp_state.display();
 		#endif
 	}
-	
-	
-	
-
 }
 
 //////////////////////////////////////////////////////////////////
@@ -430,16 +428,10 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
     return getStateFromNumber(state_list, 0)->getInput();
 }
 
+
 //////////////////////////////////////////////////////////////////
 //                             MAIN                             //
 //////////////////////////////////////////////////////////////////
-
-/*
-Deux flux binaire peuvent arriver à un même état
-
-Mais deux flux binaire identiques doivent arriver sur un seul état
-*/
-
 
 int main()
 {
@@ -458,38 +450,53 @@ int main()
     for(int i=0;i<R;++i) {
         mess.push_back(bitset<K>(0));
     }
-
-    // Coding of the message => mess_cod
-    mess_cod = GSM_code(mess);
-
-    // Simulation of a transmission (errors) => mess_tra
-    mess_tra = GSM_transmission(mess_cod);
-
-    // Decoding of the transmitted message => mess_dec
-    mess_dec = GSM_decode(mess_tra);
-
-    cout << "Source Message   : ";
+    
+    // Display
+	cout << "Source Message   : ";
     for (vector<bitset<K> >::iterator it = mess.begin() ; it != mess.end(); ++it) {
         cout << ' ' << *it;
     }
     cout << '\n';
 
-    cout << "Coded Message    : ";
+    // Coding of the message => mess_cod
+    mess_cod = GSM_code(mess);
+    
+    // Display
+	cout << "Coded Message    : ";
     for (vector<bitset<N> >::iterator it = mess_cod.begin() ; it != mess_cod.end(); ++it) {
         cout << ' ' << *it;
     }
     cout << '\n';
 
+    // Simulation of a transmission (errors) => mess_tra
+    mess_tra = GSM_transmission(mess_cod);
+    
+    // Display
     cout << "Received Message : ";
     for (vector<bitset<N> >::iterator it = mess_tra.begin() ; it != mess_tra.end(); ++it) {
         cout << ' ' << *it;
     }
     cout << '\n';
 
+    // Decoding of the transmitted message => mess_dec
+    mess_dec = GSM_decode(mess_tra);
+
+	// Display
     cout << "Decoded Message  : ";
     for (vector<bitset<K> >::iterator it = mess_dec.begin() ; it != mess_dec.end(); ++it) {
         cout << ' ' << *it;
     }
     cout << '\n';
+    
+    // check equality
+    cout << '\n';
+    if(mess == mess_dec) {
+		// equals
+		cout << "SUCCESS :-)";
+	} else {
+		// not equals
+		cout << "FAIL :-(";
+	}
+	cout << '\n';
 }
 
