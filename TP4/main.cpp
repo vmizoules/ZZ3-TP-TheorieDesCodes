@@ -201,7 +201,9 @@ class State {
 				cout << *ita;
 			}
 			
-			cout << " dst=" << distance << " - diff=" << difference <<  endl;
+			cout << " dst=" << distance << " - diff=" << difference;
+			
+			cout << " isNew(0non/1oui)=" << is_new << endl;
 		}
 		void display2() {
 			cout << "[" << state_name << "] - input=";
@@ -275,6 +277,7 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			// set difference
 			actual_state->setDifference(difference);
 			// normal processing
+			actual_state->setInput(old_state->getOldInput());
 			actual_state->addInputValue(entry);
 		} else {
 			#ifdef FULL_DEBUG
@@ -378,12 +381,16 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			// define actual state
 			actual_state = & actual_state_it->second;
 			
-			/*#ifdef DEBUG
+			#ifdef DEBUGa
 			cout << "	" << "----1 state ----" << endl;
 			cout << "		"; actual_state->display();
-			#endif*/
+			#endif
 			
 			if(actual_state->isNotNew()) {
+				#ifdef DEBUGa
+				cout << "		on le traite" << endl;
+				#endif
+				
 				// compute new if input bit was 0
 				computeNewState(state_list, actual_state, *actual_msg_block_it, 0);
 				// compute new if input bit was 1 
@@ -394,6 +401,10 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			
 		}
 		
+		#ifdef DEBUG
+		cout << "	Liste des etat à la fin de la boucle" << endl;
+		#endif
+		
 		// for each state, update distance & remove "new" flag
         for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
 			actual_state = & actual_state_it->second;
@@ -402,11 +413,11 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			updateState(actual_state);
 			
 			#ifdef DEBUG
-			cout << "	" << "----1 state ----" << endl;
-			cout << "		"; actual_state->display();
-			cout << "		"; actual_state->display2();
+			cout << "	"; actual_state->display();
 			#endif
+			
 		}
+		
         
         
     }
