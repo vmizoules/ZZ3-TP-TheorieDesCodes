@@ -11,7 +11,7 @@
 const int N=2;
 const int K=1;
 const int R=4;
-const int NbMot = 3;
+const int NbMot = 10;
 
 #define DEBUG
 //#define FULL_DEBUG
@@ -115,6 +115,7 @@ class State {
         int difference;
         bitset<R> state_name ;
         bool is_new;
+        bool is_used;
     
     public:
         State () {}
@@ -123,7 +124,8 @@ class State {
             distance(dist),
             difference(diff),
             state_name(name),
-            is_new(true)
+            is_new(true),
+            is_used(true)
             {
 				setInput(in);
 				updateOldInput();
@@ -159,6 +161,11 @@ class State {
 		bool isNew() const { return is_new; }
 		bool isNotNew() const { return ! is_new; }
 		void setNotNew() {is_new = false;}
+
+		bool isUsed() const { return is_used; }
+		bool isNotUsed() const { return ! is_used; }
+		void setNotUsed() {is_used = false;}
+		void setUsed() {is_used = true;}
 
 		// other
 		bitset<N> getResultByEntry(int entry) const {
@@ -203,24 +210,10 @@ class State {
 			
 			cout << " dst=" << distance << " - diff=" << difference;
 			
-			cout << " isNew(0non/1oui)=" << is_new << endl;
+			cout << " isNew(0non/1oui)=" << is_new;
+			
+			cout << " isUsed(0non/1oui)=" << is_used << endl;
 		}
-		void display2() {
-			cout << "[" << state_name << "] - input=";
-			
-			for (vector<bitset<K> >::const_iterator it = getInput().begin() ; it != getInput().end(); ++it) {
-				cout << *it;
-			}
-			
-			cout << " oldInput=";
-			
-			for (vector<bitset<K> >::const_iterator ita = getOldInput().begin() ; ita != getOldInput().end(); ++ita) {
-				cout << *ita;
-			}
-			
-			cout << " dst=" << distance << " - diff=" << difference <<  endl;
-		}
-		
 };
 
 void insertStateInList(map< unsigned long, State > & state_list, State new_state) {
@@ -236,6 +229,7 @@ void updateState(State * & state)
 	state->setDistance( state->getDistance() + state->getDifference() );
 	state->setDifference(-1);
 	state->setNotNew();
+	state->setNotUsed();
 	state->updateOldInput();
 }
 
@@ -266,6 +260,7 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 		
 		// get state
 		actual_state = getStateFromNumber(state_list, temp_state_name);
+		actual_state->setUsed();
 		
 		// if diff == -1
 		if(actual_state->getDifference() == -1) {
@@ -359,15 +354,14 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 {
     // -- init vars
-    vector< bitset<K> > decoded_message;
     map< unsigned long, State > state_list;
     State * actual_state;
     
     // create first state - input:"" - dist:0 - diff:-1 - statename:0000
-    State first_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));
-    first_state.setNotNew();
+    State root_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));
+    root_state.setNotNew();
     // add first state in list
-    insertStateInList(state_list, first_state);
+    insertStateInList(state_list, root_state);
 
     // for each group of 2 bits of transmitted_message
     for(vector< bitset<N> >::iterator actual_msg_block_it = transmitted_message.begin() ; actual_msg_block_it != transmitted_message.end(); ++actual_msg_block_it) {
@@ -409,34 +403,20 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
         for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
 			actual_state = & actual_state_it->second;
 			
-			// update state
-			updateState(actual_state);
-			
 			#ifdef DEBUG
 			cout << "	"; actual_state->display();
 			#endif
 			
+			// update state
+			updateState(actual_state);
 		}
 		
         
         
     }
 
-   
-    // end -> it stays only 1 state    
-    // read input attribut
-    
-    
-
-
-
-    /////////// TO DELETE AND MODIFY ///////////
-    for(unsigned int i=0;i<transmitted_message.size();++i) {
-        decoded_message.push_back(randBitset<K>());
-    }
-    ////////////////////////////////////////////
-
-    return decoded_message;
+	// return input from root state
+    return getStateFromNumber(state_list, 0)->getInput();
 }
 
 //////////////////////////////////////////////////////////////////
