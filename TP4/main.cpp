@@ -11,9 +11,10 @@
 const int N=2;
 const int K=1;
 const int R=4;
-const int NbMot = 3;
+const int NbMot = 20;
+const float ErrorRate = 0.1; // 0.1 <=> 1 erreur pour 10 bit transmis
 
-#define DEBUG
+//#define DEBUG
 //#define FULL_DEBUG
 
 using namespace std;
@@ -94,8 +95,19 @@ vector< bitset<N> > GSM_code(vector< bitset<K> > mess)
 vector< bitset<N> >  GSM_transmission(vector< bitset<N> > mess_cod)
 {
     vector< bitset<N> > mess_tra = mess_cod;
+    bitset<N> actual_msg_block_it;
 
-    //TODO: Code here
+	cout << "Transmitting..." << endl;
+	// iterate over vector
+	for(vector< bitset<N> >::iterator actual_msg_block_it = mess_tra.begin() ; actual_msg_block_it != mess_tra.end(); ++actual_msg_block_it) {
+		// get random from error rate
+		if( (1 + rand()%((int)(1/ErrorRate))) == 1 ) {
+			// replace these 2 bits by a random bitset
+			*actual_msg_block_it = randBitset<N>();
+			cout << "	Insert 1 error" << endl;
+		}
+	}
+	cout << "End of transmition!" << endl;
 
     return mess_tra;
 }
@@ -112,18 +124,22 @@ class State {
 		vector< bitset<K> > input;
 		vector< bitset<K> > old_input;
 		int distance;
+		int old_distance;
         int difference;
         bitset<R> state_name ;
         bool is_new;
+        bool is_used;
     
     public:
         State () {}
         State (vector< bitset<K> > in, int dist, int diff, bitset<R> name)
             :
             distance(dist),
+            old_distance(dist),
             difference(diff),
             state_name(name),
-            is_new(true)
+            is_new(true),
+            is_used(true)
             {
 				setInput(in);
 				updateOldInput();
@@ -156,9 +172,18 @@ class State {
 		int getDistance() const { return distance; }
 		void setDistance(int dist) { distance = dist; }
 		
+		int getOldDistance() const { return old_distance; }
+		void setOldDistance(int dist) { old_distance = dist; }
+		void updateOldDistance() { setOldDistance(getDistance()); }
+		
 		bool isNew() const { return is_new; }
 		bool isNotNew() const { return ! is_new; }
 		void setNotNew() {is_new = false;}
+
+		bool isUsed() const { return is_used; }
+		bool isNotUsed() const { return ! is_used; }
+		void setNotUsed() {is_used = false;}
+		void setUsed() {is_used = true;}
 
 		// other
 		bitset<N> getResultByEntry(int entry) const {
@@ -201,24 +226,12 @@ class State {
 				cout << *ita;
 			}
 			
-			cout << " dst=" << distance << " - diff=" << difference <<  endl;
+			cout << " dst=" << distance << " - diff=" << difference;
+			
+			cout << " isNew(0non/1oui)=" << is_new;
+			
+			cout << " isUsed(0non/1oui)=" << is_used << endl;
 		}
-		void display2() {
-			cout << "[" << state_name << "] - input=";
-			
-			for (vector<bitset<K> >::const_iterator it = getInput().begin() ; it != getInput().end(); ++it) {
-				cout << *it;
-			}
-			
-			cout << " oldInput=";
-			
-			for (vector<bitset<K> >::const_iterator ita = getOldInput().begin() ; ita != getOldInput().end(); ++ita) {
-				cout << *ita;
-			}
-			
-			cout << " dst=" << distance << " - diff=" << difference <<  endl;
-		}
-		
 };
 
 void insertStateInList(map< unsigned long, State > & state_list, State new_state) {
@@ -234,6 +247,9 @@ void updateState(State * & state)
 	state->setDistance( state->getDistance() + state->getDifference() );
 	state->setDifference(-1);
 	state->setNotNew();
+	state->setNotUsed();
+	
+	state->updateOldDistance();
 	state->updateOldInput();
 }
 
@@ -264,12 +280,17 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 		
 		// get state
 		actual_state = getStateFromNumber(state_list, temp_state_name);
+		actual_state->setUsed();
 		
 		// if diff == -1
 		if(actual_state->getDifference() == -1) {
 			#ifdef FULL_DEBUG
 			cout << "			diff==-1" << endl;
 			#endif
+			// replace datas
+			actual_state->setInput(old_state->getOldInput());
+			actual_state->setDistance(old_state->getOldDistance());
+			
 			// compute difference
 			difference = computeDifference(old_state, actual_encoded_entry, entry);
 			// set difference
@@ -277,6 +298,7 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			// normal processing
 			actual_state->addInputValue(entry);
 		} else {
+			// diff != -1 -> state already impacted by this loop
 			#ifdef FULL_DEBUG
 			cout << "			diff!=-1" << endl;
 			#endif
@@ -285,7 +307,7 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			
 			//--  compute new dst+diff
 			difference = computeDifference(old_state, actual_encoded_entry, entry);
-			int new_total_dst = old_state->getDistance() + difference;
+			int new_total_dst = old_state->getOldDistance() + difference;
 			
 			if(old_total_dst < new_total_dst) {
 				// nothing to do
@@ -295,32 +317,13 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 				actual_state->setInput(old_state->getOldInput());
 				actual_state->addInputValue(entry);
 				
-				actual_state->setDistance(old_state->getDistance());
+				actual_state->setDistance(old_state->getOldDistance());
 				
 				actual_state->setDifference(difference);
 			}
 			
 			
 		}
-		
-		// GARDER POUR LE COMPTE RENDU ?
-		
-		// récupérer le state
-		// si diff == -1
-			// traiter normal (ajouter input, calcul diff)
-		// sinon
-			// calcul l'ancien dst+diff
-			// calcul nouveau dst+diff
-			// si ancien < nouveau
-				// rien a faire
-			// sinon
-				// si égale
-					// random (ou rien ? garder vieux ?)
-				// sinon
-					// setter input
-					// setter distance
-					// setter difference
-					
 					
 		#ifdef FULL_DEBUG
 			cout << "			"; actual_state->display();
@@ -330,7 +333,9 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 		// compute difference
 		difference = computeDifference(old_state, actual_encoded_entry, entry);
 		
-		State temp_state = State(actual_state->getOldInput(), old_state->getDistance(), difference, temp_state_name);
+		// create the new state
+		State temp_state = State(actual_state->getOldInput(), old_state->getOldDistance(), difference, temp_state_name);
+		
 		// add entry in input
 		temp_state.addInputValue(entry);
 		
@@ -341,10 +346,6 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			cout << "			"; temp_state.display();
 		#endif
 	}
-	
-	
-	
-
 }
 
 //////////////////////////////////////////////////////////////////
@@ -356,15 +357,14 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 {
     // -- init vars
-    vector< bitset<K> > decoded_message;
     map< unsigned long, State > state_list;
     State * actual_state;
     
     // create first state - input:"" - dist:0 - diff:-1 - statename:0000
-    State first_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));
-    first_state.setNotNew();
+    State root_state =  State (vector< bitset<K> >(), 0, -1, bitset<R>(0));
+    root_state.setNotNew();
     // add first state in list
-    insertStateInList(state_list, first_state);
+    insertStateInList(state_list, root_state);
 
     // for each group of 2 bits of transmitted_message
     for(vector< bitset<N> >::iterator actual_msg_block_it = transmitted_message.begin() ; actual_msg_block_it != transmitted_message.end(); ++actual_msg_block_it) {
@@ -378,12 +378,16 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			// define actual state
 			actual_state = & actual_state_it->second;
 			
-			/*#ifdef DEBUG
+			#ifdef DEBUG
 			cout << "	" << "----1 state ----" << endl;
 			cout << "		"; actual_state->display();
-			#endif*/
+			#endif
 			
 			if(actual_state->isNotNew()) {
+				#ifdef DEBUG
+				cout << "		on le traite" << endl;
+				#endif
+				
 				// compute new if input bit was 0
 				computeNewState(state_list, actual_state, *actual_msg_block_it, 0);
 				// compute new if input bit was 1 
@@ -394,39 +398,36 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			
 		}
 		
+		#ifdef DEBUG
+		cout << "	Liste des etat a la fin de la boucle" << endl;
+		#endif
+		
 		// for each state, update distance & remove "new" flag
         for (map< unsigned long, State >::iterator actual_state_it = state_list.begin() ; actual_state_it != state_list.end(); ++actual_state_it) {
 			actual_state = & actual_state_it->second;
+			
+			/*
+			#ifdef DEBUG
+			cout << "	"; actual_state->display();
+			#endif
+			*/
 			
 			// update state
 			updateState(actual_state);
 			
 			#ifdef DEBUG
-			cout << "	" << "----1 state ----" << endl;
 			cout << "		"; actual_state->display();
-			cout << "		"; actual_state->display2();
 			#endif
 		}
+		
         
         
     }
 
-   
-    // end -> it stays only 1 state    
-    // read input attribut
-    
-    
-
-
-
-    /////////// TO DELETE AND MODIFY ///////////
-    for(unsigned int i=0;i<transmitted_message.size();++i) {
-        decoded_message.push_back(randBitset<K>());
-    }
-    ////////////////////////////////////////////
-
-    return decoded_message;
+	// return input from root state
+    return getStateFromNumber(state_list, 0)->getInput();
 }
+
 
 //////////////////////////////////////////////////////////////////
 //                             MAIN                             //
@@ -434,6 +435,8 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 
 int main()
 {
+	srand(time(0)); // initialize random
+	
     vector< bitset<K> > mess;
     vector< bitset<N> > mess_cod;
     vector< bitset<N> > mess_tra;
@@ -447,38 +450,53 @@ int main()
     for(int i=0;i<R;++i) {
         mess.push_back(bitset<K>(0));
     }
-
-    // Coding of the message => mess_cod
-    mess_cod = GSM_code(mess);
-
-    // Simulation of a transmission (errors) => mess_tra
-    mess_tra = GSM_transmission(mess_cod);
-
-    // Decoding of the transmitted message => mess_dec
-    mess_dec = GSM_decode(mess_tra);
-
-    cout << "Source Message   : ";
+    
+    // Display
+	cout << "Source Message   : ";
     for (vector<bitset<K> >::iterator it = mess.begin() ; it != mess.end(); ++it) {
         cout << ' ' << *it;
     }
     cout << '\n';
 
-    cout << "Coded Message    : ";
+    // Coding of the message => mess_cod
+    mess_cod = GSM_code(mess);
+    
+    // Display
+	cout << "Coded Message    : ";
     for (vector<bitset<N> >::iterator it = mess_cod.begin() ; it != mess_cod.end(); ++it) {
         cout << ' ' << *it;
     }
     cout << '\n';
 
+    // Simulation of a transmission (errors) => mess_tra
+    mess_tra = GSM_transmission(mess_cod);
+    
+    // Display
     cout << "Received Message : ";
     for (vector<bitset<N> >::iterator it = mess_tra.begin() ; it != mess_tra.end(); ++it) {
         cout << ' ' << *it;
     }
     cout << '\n';
 
+    // Decoding of the transmitted message => mess_dec
+    mess_dec = GSM_decode(mess_tra);
+
+	// Display
     cout << "Decoded Message  : ";
     for (vector<bitset<K> >::iterator it = mess_dec.begin() ; it != mess_dec.end(); ++it) {
         cout << ' ' << *it;
     }
     cout << '\n';
+    
+    // check equality
+    cout << '\n';
+    if(mess == mess_dec) {
+		// equals
+		cout << "SUCCESS :-)";
+	} else {
+		// not equals
+		cout << "FAIL :-(";
+	}
+	cout << '\n';
 }
 
