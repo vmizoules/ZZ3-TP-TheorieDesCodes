@@ -11,8 +11,8 @@
 const int N=2;
 const int K=1;
 const int R=4;
-const int NbMot = 20;
-const float ErrorRate = 0.05;
+const int NbMot = 16;
+const float ErrorRate = 0.0003;
 
 //#define DEBUG
 //#define FULL_DEBUG
@@ -44,7 +44,7 @@ template<int bits> bitset<bits> randBitset()
 
 vector< bitset<N> > GSM_code(vector< bitset<K> > mess)
 {
-    int g0, g1;
+    int i=0, g0, g1;
     vector< bitset<N> > mess_out;
 
     bitset<N> cod_out; 
@@ -122,6 +122,7 @@ class State {
 		vector< bitset<K> > input;
 		vector< bitset<K> > old_input;
 		int distance;
+		int old_distance;
         int difference;
         bitset<R> state_name ;
         bool is_new;
@@ -132,6 +133,7 @@ class State {
         State (vector< bitset<K> > in, int dist, int diff, bitset<R> name)
             :
             distance(dist),
+            old_distance(dist),
             difference(diff),
             state_name(name),
             is_new(true),
@@ -167,6 +169,10 @@ class State {
 		
 		int getDistance() const { return distance; }
 		void setDistance(int dist) { distance = dist; }
+		
+		int getOldDistance() const { return old_distance; }
+		void setOldDistance(int dist) { old_distance = dist; }
+		void updateOldDistance() { setOldDistance(getDistance()); }
 		
 		bool isNew() const { return is_new; }
 		bool isNotNew() const { return ! is_new; }
@@ -240,6 +246,8 @@ void updateState(State * & state)
 	state->setDifference(-1);
 	state->setNotNew();
 	state->setNotUsed();
+	
+	state->updateOldDistance();
 	state->updateOldInput();
 }
 
@@ -277,23 +285,27 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 			#ifdef FULL_DEBUG
 			cout << "			diff==-1" << endl;
 			#endif
+			// replace datas
+			actual_state->setInput(old_state->getOldInput());
+			actual_state->setDistance(old_state->getOldDistance());
+			
 			// compute difference
 			difference = computeDifference(old_state, actual_encoded_entry, entry);
 			// set difference
 			actual_state->setDifference(difference);
 			// normal processing
-			actual_state->setInput(old_state->getOldInput());
 			actual_state->addInputValue(entry);
 		} else {
+			// diff != -1 -> state already impacted by this loop
 			#ifdef FULL_DEBUG
 			cout << "			diff!=-1" << endl;
 			#endif
 			//-- compute old dst+diff
-			int old_total_dst = actual_state->getDistance() + actual_state->getDifference();
+			int old_total_dst = actual_state->getOldDistance() + actual_state->getDifference();
 			
 			//--  compute new dst+diff
 			difference = computeDifference(old_state, actual_encoded_entry, entry);
-			int new_total_dst = old_state->getDistance() + difference;
+			int new_total_dst = old_state->getOldDistance() + difference;
 			
 			if(old_total_dst < new_total_dst) {
 				// nothing to do
@@ -303,32 +315,13 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 				actual_state->setInput(old_state->getOldInput());
 				actual_state->addInputValue(entry);
 				
-				actual_state->setDistance(old_state->getDistance());
+				actual_state->setDistance(old_state->getOldDistance());
 				
 				actual_state->setDifference(difference);
 			}
 			
 			
 		}
-		
-		// GARDER POUR LE COMPTE RENDU ?
-		
-		// récupérer le state
-		// si diff == -1
-			// traiter normal (ajouter input, calcul diff)
-		// sinon
-			// calcul l'ancien dst+diff
-			// calcul nouveau dst+diff
-			// si ancien < nouveau
-				// rien a faire
-			// sinon
-				// si égale
-					// random (ou rien ? garder vieux ?)
-				// sinon
-					// setter input
-					// setter distance
-					// setter difference
-					
 					
 		#ifdef FULL_DEBUG
 			cout << "			"; actual_state->display();
@@ -338,7 +331,9 @@ void computeNewState(map< unsigned long, State > & state_list, State * actual_st
 		// compute difference
 		difference = computeDifference(old_state, actual_encoded_entry, entry);
 		
-		State temp_state = State(actual_state->getOldInput(), old_state->getDistance(), difference, temp_state_name);
+		// create the new state
+		State temp_state = State(actual_state->getOldInput(), old_state->getOldDistance(), difference, temp_state_name);
+		
 		// add entry in input
 		temp_state.addInputValue(entry);
 		
@@ -406,7 +401,7 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 		}
 		
 		#ifdef DEBUG
-		cout << "	Liste des etat à la fin de la boucle" << endl;
+		cout << "	Liste des etat a la fin de la boucle" << endl;
 		#endif
 		
 		// for each state, update distance & remove "new" flag
@@ -419,6 +414,10 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			
 			// update state
 			updateState(actual_state);
+			
+			#ifdef DEBUG
+			cout << "		apres update - "; actual_state->display();
+			#endif
 		}
 		
         
