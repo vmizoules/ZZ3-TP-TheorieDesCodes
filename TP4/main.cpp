@@ -13,7 +13,7 @@ const int K=1;
 const int R=4;
 const int NbMot = 10;
 
-#define DEBUG
+//#define DEBUG
 //#define FULL_DEBUG
 
 using namespace std;
@@ -43,7 +43,7 @@ template<int bits> bitset<bits> randBitset()
 
 vector< bitset<N> > GSM_code(vector< bitset<K> > mess)
 {
-    int i=0, g0, g1;
+    int g0, g1;
     vector< bitset<N> > mess_out;
 
     bitset<N> cod_out; 
@@ -375,13 +375,13 @@ vector< bitset<K> > GSM_decode(vector< bitset<N> > transmitted_message)
 			// define actual state
 			actual_state = & actual_state_it->second;
 			
-			#ifdef DEBUGa
+			#ifdef DEBUG
 			cout << "	" << "----1 state ----" << endl;
 			cout << "		"; actual_state->display();
 			#endif
 			
 			if(actual_state->isNotNew()) {
-				#ifdef DEBUGa
+				#ifdef DEBUG
 				cout << "		on le traite" << endl;
 				#endif
 				
