@@ -124,16 +124,22 @@ int main()
     std::string n_s = (std::string)n_str;
     int block_size = (n_s.size()-1);
     
-    //char M_s[1000];
+	// Get message size 
+    int message_size =message.size();
+    std::cout << "Message size :" << message_size << std::endl;
     
     // Cut message in blocks
     std::cout << "Cut Message" << std::endl;
     int a=0;
     char M_s [1000];
-    for(int i=0; i<message.size();i=i+block_size){
+    for(int i=0; i<message_size;i=i+block_size){
 		for (int j=i;j<i+block_size; j++){
 			M_s[a]=(char)message[j];
 			a++;
+			#ifdef DEBUG
+				std::cout << "Je rentre j:"<< j << "i:"<< i ;
+				std::cout <<"m:" << (char)message[j] << "";
+			#endif 
 		}
 		a=0;
 		
@@ -147,6 +153,8 @@ int main()
 		// display 
 		char C_str[1000];
 		mpz_get_str(C_str,10,c);    
+		std::cout << "\t C = " << C_str << std::endl << std::endl;
+		
 		std::cout << "\t C = " << C_str << std::endl << std::endl;
 			
 	}
