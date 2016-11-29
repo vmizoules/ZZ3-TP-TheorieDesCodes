@@ -117,6 +117,10 @@ int main()
 	// taille des nombre premier de 2048 bits 
 	// -> n doit être de cette grandeur la 
      
+    //vars 
+    mpz_t decrypt_message_mpz;
+	mpz_init(decrypt_message_mpz);
+     
     // Message
 	std::string message = "6882326879666683";
     
@@ -153,9 +157,13 @@ int main()
 		// display 
 		char C_str[1000];
 		mpz_get_str(C_str,10,c);    
-		std::cout << "\t C = " << C_str << std::endl << std::endl;
+		std::cout << "\t Encrypted = " << C_str << std::endl << std::endl;
 		
-		std::cout << "\t C = " << C_str << std::endl << std::endl;
+		// Decrypted the message 
+		mpz_powm(decrypt_message_mpz, c, d, n);
+		char decrypt_message_str[1000];
+		mpz_get_str(decrypt_message_str,10,decrypt_message_mpz);  
+		std::cout << "\t Decrypted = " << decrypt_message_str << std::endl << std::endl;
 			
 	}
 
