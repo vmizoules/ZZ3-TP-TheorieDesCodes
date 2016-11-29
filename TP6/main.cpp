@@ -25,8 +25,11 @@ void setToRandom(mpz_t & rand_Num, const unsigned int min, const unsigned int ma
 	mpz_init(rand_max);
 	// compute randmax to make rand between 0 and rand_max (not included)
 	mpz_init_set_ui(rand_max, (unsigned long)(rand_max_ui +1 -rand_min_ui ));
-
+	
+	// get random between 0 and rand_max-rand_min
 	mpz_urandomm(rand_Num,r_state,rand_max);
+	
+	// add rand_min to have random between rand_min and rand_max
 	mpz_add_ui(rand_Num, rand_Num, rand_min_ui);
 	
 	// for DEBUG
@@ -82,6 +85,9 @@ int main()
      *
      */
     
+    
+    
+    
     /*
      *  Step 1 : Get two large primes.
      */
@@ -92,13 +98,26 @@ int main()
     // Fix p & q
     mpz_init_set_str(p, "47", 0);
     mpz_init_set_str(q, "71", 0);
-    char p_str[1000];
-    char q_str[1000];
-    mpz_get_str(p_str,10,p);
-    mpz_get_str(q_str,10,q);
     
+    
+    // TODO
+    // Code here !
+    
+	// taille des nombre premier de 2048 bits 
+	// -> n doit être de cette grandeur la 
+    
+    // display p
+    char p_str[1000];
+    mpz_get_str(p_str,10,p);
     std::cout << "Random Prime 'p' = " << p_str <<  std::endl;
+    // display q
+    char q_str[1000];
+    mpz_get_str(q_str,10,q);
     std::cout << "Random Prime 'q' = " << q_str <<  std::endl;
+    
+    
+    
+    
     
     /*
      *  Step 2 : Calculate n (=pq) ie the 1024 bit modulus
@@ -116,7 +135,7 @@ int main()
     std::cout << "\t n = " << n_str << std::endl;
     
     
-    /* Calculate x... -> phi */
+    /* Calculate x(phi)*/
     // init vars
     mpz_t p_minus_1,q_minus_1;
     mpz_init(p_minus_1);
@@ -133,14 +152,18 @@ int main()
     mpz_get_str(phi_str,10,x);
     std::cout << "\t phi(n) = " << phi_str << std::endl;
 
+
+
+
+
     /*
      *  Step 3 : Get small odd integer e such that gcd(e,x) = 1.
-     */    
+     */
     // set random e between 2 and phi-1
     setToRandom(e, 2, mpz_get_ui(x)-1);
     // check if e is even
     if(isEven(e)) {
-		// change the parity
+		// change the parity (+1)
 		mpz_add_ui(e,e,(unsigned long int)1);
 	}
 	// check gcd
@@ -149,7 +172,7 @@ int main()
     mpz_gcd(pgcd, e, x);
     // if pgcd is not equal to 1
     while(mpz_cmp_ui(pgcd, 1) != 0) {
-		//add 2 and re-compute
+		// do +2 and re-compute
 		mpz_add_ui(e, e, (unsigned long int)2);
 		
 		mpz_gcd(pgcd, e, x);
@@ -158,6 +181,7 @@ int main()
 	// display pgcd
     char pgcd_str[1000];
     mpz_get_str(pgcd_str,10,pgcd);
+    mpz_clear(pgcd);
     std::cout << "\t gcd(e,x) = " << pgcd_str << std::endl;
     // display e
     // DEBUG : mpz_init_set_str(e, "79", 0);
@@ -171,74 +195,105 @@ int main()
     /*
      *  Step 4 : Calculate unique d such that ed = 1(mod x)
      */
-    mpz_invert(d, e, x); // equals to 1019 if e=79 phi=3220
+    // compute invert of e mod x
+    mpz_invert(d, e, x);
     
     // display d
     char d_str[1000];
     mpz_get_str(d_str,10,d);
     std::cout << "\t d = " << d_str << std::endl << std::endl;
+    
+    
+    
 
     /*
      *  Step 5 : Print the public and private key pairs...
      */
     std::cout << "Public Keys  (e,n): ( " << e_str <<" , " << n_str << " )" << std::endl;
     std::cout << "Private Keys (d,n): ( " << d_str <<" , " << n_str << " )" << std::endl;
-    
+
+
+
+
     /*
      *  Step 6 : Encrypt the message
      */
-	// taille des nombre premier de 2048 bits 
-	// -> n doit être de cette grandeur la 
-     
-    //vars 
-    mpz_t decrypt_message_mpz;
-	mpz_init(decrypt_message_mpz);
-     
-    // Message
-	std::string message = "6882326879666683";
+
+    // init vars
+    mpz_t decrypt_block_mpz;
+	mpz_init(decrypt_block_mpz);
+	std::string original_msg = "6882326879666683";
+	std::string encrypted_msg;
+	std::string decrypted_msg;
+	int temp_msg_block_index = 0;
+    char temp_msg_block_str[1000];
+    char buffer[1000];
     
-    // Get n size 
+    // get n size 
     std::string n_s = (std::string)n_str;
     int block_size = (n_s.size()-1);
     
-	// Get message size 
-    int message_size =message.size();
+	// get message size 
+    int message_size = original_msg.size();
     std::cout << "Message size :" << message_size << std::endl;
     
-    // Cut message in blocks
-    std::cout << "Cut Message" << std::endl;
-    int a=0;
-    char M_s [1000];
-    for(int i=0; i<message_size;i=i+block_size){
-		for (int j=i;j<i+block_size; j++){
-			M_s[a]=(char)message[j];
-			a++;
+    // for each message blocks
+    for(int i=0 ; i<message_size ; i = i+block_size) {
+		// for each char in block
+		for(int j=i ; j<i+block_size ; j++) {
+			// copy char
+			temp_msg_block_str[temp_msg_block_index] = (char)original_msg[j];
+			// increment index
+			temp_msg_block_index++;
+			
 			#ifdef DEBUG
 				std::cout << "Je rentre j:"<< j << "i:"<< i ;
-				std::cout <<"m:" << (char)message[j] << "";
+				std::cout <<"m:" << (char)original_msg[j] << "";
 			#endif 
 		}
-		a=0;
+		temp_msg_block_index = 0;
 		
-		// Convert M_s string to M mpz_t
-		mpz_init_set_str(M, M_s, 0);
-		
-		// Exponental Function : 
-		// mpz_pown(mpz_t rop, mpz_t base, mpz_t exp, mpz_t mod) 
-		mpz_powm(c, M, e, n);
+		// copy temp_msg_block_str to M
+		mpz_init_set_str(M, temp_msg_block_str, 0);
 
-		// display 
-		char C_str[1000];
-		mpz_get_str(C_str,10,c);    
-		std::cout << "\t Encrypted = " << C_str << std::endl << std::endl;
+		// encrypt with exponential function // mpz_pown(mpz_t rop, mpz_t base, mpz_t exp, mpz_t mod)
+		mpz_powm(c, M, e, n);
 		
-		// Decrypted the message 
-		mpz_powm(decrypt_message_mpz, c, d, n);
-		char decrypt_message_str[1000];
-		mpz_get_str(decrypt_message_str,10,decrypt_message_mpz);  
-		std::cout << "\t Decrypted = " << decrypt_message_str << std::endl << std::endl;
-			
+		// save encrypted block
+		mpz_get_str(buffer, 10, c);
+		encrypted_msg += buffer;
+		
+		#ifdef DEBUG
+			// display encrypted block
+			char C_str[1000];
+			mpz_get_str(C_str,10,c);
+			std::cout << "\t Encrypted = " << C_str << std::endl << std::endl;
+		#endif
+		
+		// decrypt block
+		mpz_powm(decrypt_block_mpz, c, d, n);
+		
+		// save decrypted block
+		mpz_get_str(buffer, 10, decrypt_block_mpz); 
+		decrypted_msg += buffer;
+		
+		#ifdef DEBUG
+			// display decrypted block
+			char decrypt_message_str[1000];
+			mpz_get_str(decrypt_message_str,10,decrypt_block_mpz);  
+			std::cout << "\t Decrypted = " << decrypt_block_mpz << std::endl << std::endl;
+		#endif		
 	}
+
+	// display original message
+	std::cout << "Original message = " << original_msg << std::endl;
+
+	// display encrypted message
+	std::cout << "Encrypted message = " << encrypted_msg << std::endl;
+	
+	// display decrypted message
+	std::cout << "Decrypted message = " << decrypted_msg << std::endl;
+
 
     /* Clean up the GMP integers */
     mpz_clear(p_minus_1);
