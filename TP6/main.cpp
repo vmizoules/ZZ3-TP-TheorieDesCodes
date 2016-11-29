@@ -110,12 +110,47 @@ int main()
      */
     std::cout << "Public Keys  (e,n): ( " << e_str <<" , " << n_str << " )" << std::endl;
     std::cout << "Private Keys (d,n): ( " << d_str <<" , " << n_str << " )" << std::endl;
-    /*
-     *  Encrypt
-     */
-
-    //TODO
     
+    /*
+     *  Step 6 : Encrypt the message
+     */
+	// taille des nombre premier de 2048 bits 
+	// -> n doit être de cette grandeur la 
+     
+    // Message
+	std::string message = "6882326879666683";
+    
+    // Get n size 
+    std::string n_s = (std::string)n_str;
+    int block_size = (n_s.size()-1);
+    
+    //char M_s[1000];
+    
+    // Cut message in blocks
+    std::cout << "Cut Message" << std::endl;
+    int a=0;
+    char M_s [1000];
+    for(int i=0; i<message.size();i=i+block_size){
+		for (int j=i;j<i+block_size; j++){
+			M_s[a]=(char)message[j];
+			a++;
+		}
+		a=0;
+		
+		// Convert M_s string to M mpz_t
+		mpz_init_set_str(M, M_s, 0);
+		
+		// Exponental Function : 
+		// mpz_pown(mpz_t rop, mpz_t base, mpz_t exp, mpz_t mod) 
+		mpz_powm(c, M, e, n);
+
+		// display 
+		char C_str[1000];
+		mpz_get_str(C_str,10,c);    
+		std::cout << "\t C = " << C_str << std::endl << std::endl;
+			
+	}
+
     /* Clean up the GMP integers */
     mpz_clear(p_minus_1);
     mpz_clear(q_minus_1);
