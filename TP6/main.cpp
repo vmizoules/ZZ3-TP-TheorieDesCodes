@@ -95,16 +95,21 @@ int main()
     mpz_init(p);
     mpz_init(q);
     
-    // Fix p & q
+    // generate random (BITSTRENGTH bits) for p
+    mpz_urandomb(p, r_state, BITSTRENGTH);
+    // make it prime
+    mpz_nextprime(p, p);
+
+    // generate random for q
+    mpz_urandomb(q, r_state, BITSTRENGTH);
+    // make it prime
+    mpz_nextprime(q, q);
+
+    // For testing -> Fix p & q
+    /*
     mpz_init_set_str(p, "47", 0);
     mpz_init_set_str(q, "71", 0);
-    
-    
-    // TODO
-    // Code here !
-    
-	// taille des nombre premier de 2048 bits 
-	// -> n doit être de cette grandeur la 
+    */
     
     // display p
     char p_str[1000];
