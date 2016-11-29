@@ -43,6 +43,7 @@ int main()
     mpz_init(p);
     mpz_init(q);
     
+    // Fix p & q
     mpz_init_set_str(p, "47", 0);
     mpz_init_set_str(q, "71", 0);
     char p_str[1000];
@@ -63,6 +64,8 @@ int main()
 
     /* Calculate n... */
     mpz_mul(n,p,q);
+    
+    // display n
     mpz_get_str(n_str,10,n);
     std::cout << "\t n = " << n_str << std::endl;
     
@@ -76,6 +79,8 @@ int main()
     mpz_sub_ui(q_minus_1,q,(unsigned long int)1);
 
     mpz_mul(x,p_minus_1,q_minus_1);
+    
+    // display phi
     char phi_str[1000];
     mpz_get_str(phi_str,10,x);
     std::cout << "\t phi(n) = " << phi_str << std::endl;
@@ -84,6 +89,8 @@ int main()
      *  Step 3 : Get small odd integer e such that gcd(e,x) = 1.
      */
     mpz_init_set_str(e, "79", 0);
+    
+    // display e
     char e_str[1000];
     mpz_get_str(e_str,10,e);
     std::cout << "\t e = " << e_str << std::endl;
@@ -92,6 +99,8 @@ int main()
      *  Step 4 : Calculate unique d such that ed = 1(mod x)
      */
     mpz_init_set_str(d, "1019", 0);
+    
+    // display d
     char d_str[1000];
     mpz_get_str(d_str,10,d);
     std::cout << "\t d = " << d_str << std::endl << std::endl;
