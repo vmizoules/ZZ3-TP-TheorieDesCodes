@@ -70,14 +70,16 @@ int main()
     std::cout << "\t n = " << n_str << std::endl;
     
     
-    /* Calculate x... */
+    /* Calculate x... -> phi */
+    // init vars
     mpz_t p_minus_1,q_minus_1;
     mpz_init(p_minus_1);
     mpz_init(q_minus_1);
 
+	// do substraction
     mpz_sub_ui(p_minus_1,p,(unsigned long int)1);
     mpz_sub_ui(q_minus_1,q,(unsigned long int)1);
-
+	// do multiplication
     mpz_mul(x,p_minus_1,q_minus_1);
     
     // display phi
@@ -98,7 +100,8 @@ int main()
     /*
      *  Step 4 : Calculate unique d such that ed = 1(mod x)
      */
-    mpz_init_set_str(d, "1019", 0);
+    //mpz_init_set_str(d, "1019", 0);
+    mpz_invert(d, e, x);
     
     // display d
     char d_str[1000];
