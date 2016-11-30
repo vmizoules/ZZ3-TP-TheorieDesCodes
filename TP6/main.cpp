@@ -20,8 +20,7 @@ gmp_randstate_t r_state;
 // compute random message 
 std::string getRandomMessage(int taille){
 	// init vars
-	std::string random_out_message; 
-	std::ostringstream keep_the_rand_integer;
+	std::ostringstream rand_stream;
 	int rand_integer; 
 	// initialisation de rand
 	srand(time(NULL));
@@ -29,10 +28,9 @@ std::string getRandomMessage(int taille){
 		// rand integer 0 to 9 
 		rand_integer = rand() % 10;
 		// keep the rand integer in the out message  
-		keep_the_rand_integer << rand_integer;
-		random_out_message = keep_the_rand_integer.str();
+		rand_stream << rand_integer;
 	}
-	return random_out_message;
+	return rand_stream.str();
 } 
 
 // compute random between min (include) and max (include)
