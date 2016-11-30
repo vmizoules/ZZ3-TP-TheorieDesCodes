@@ -70,7 +70,7 @@ class VigenereCryptanalysis
 					}
 				
 					#ifdef DEBUG
-					cout << "IC for key lenght " << key_size << " start_ind " << start_ind << " - "  << IC << endl;
+						cout << "IC for key lenght " << key_size << " start_ind " << start_ind << " - "  << IC << endl;
 					#endif
 				}
 				// compute IC avg
@@ -78,7 +78,7 @@ class VigenereCryptanalysis
 			}
 			
 			#ifdef DEBUG
-			cout << "Key lenght found - " << key_size << endl;
+				cout << "Key lenght found - " << key_size << endl;
 			#endif
 			
 			// reset vars
@@ -121,13 +121,13 @@ class VigenereCryptanalysis
 					}
 					
 					#ifdef DEBUG
-					cout << "potential letter key : " << potential_letter_key << " chi2 " << chi2 << endl;
+						cout << "potential letter key : " << potential_letter_key << " chi2 " << chi2 << endl;
 					#endif
 					
 					// keep the minimal chi2 (and associated letter)
 					if(chi2 < min_chi2){
 						#ifdef DEBUG
-						cout << "change mini letter by " << potential_letter_key << " with ki2=" << chi2 << " and miniki2=" << min_chi2 << endl;
+							cout << "change mini letter by " << potential_letter_key << " with ki2=" << chi2 << " and miniki2=" << min_chi2 << endl;
 						#endif
 						
 						min_chi2 = chi2;
