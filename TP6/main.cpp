@@ -34,7 +34,7 @@ std::string getRandomMessage(int taille){
 } 
 
 // compute random between min (include) and max (include)
-void setToRandom(mpz_t & rand_Num, const unsigned int min, const unsigned int max) {
+void setToRandom(mpz_t & rand_Num, const unsigned long min, const unsigned long max) {
 
 	// init vars 
 	unsigned long rand_min_ui = min; // random between min (include)
@@ -43,21 +43,21 @@ void setToRandom(mpz_t & rand_Num, const unsigned int min, const unsigned int ma
 	mpz_init(rand_max);
 	// compute randmax to make rand between 0 and rand_max (not included)
 	mpz_init_set_ui(rand_max, (unsigned long)(rand_max_ui +1 -rand_min_ui ));
-	
+
 	// get random between 0 and rand_max-rand_min
 	mpz_urandomm(rand_Num,r_state,rand_max);
-	
+
 	// add rand_min to have random between rand_min and rand_max
 	mpz_add_ui(rand_Num, rand_Num, rand_min_ui);
-	
+
 	// for DEBUG
 	//gmp_printf("%Zd\n", rand_Num);
-	
-	return;
+
 }
 
 // check parity of a mpz number
 bool isEven(const mpz_t & num) {
+	/* -- Manual method --
 	mpz_t r;
 	mpz_init(r);
 	bool ret = true;
@@ -74,7 +74,81 @@ bool isEven(const mpz_t & num) {
 	mpz_clear(r);
 	
 	return ret;
+	*/
+	
+	return (mpz_tstbit( num, 0 ) == 0);
 }
+
+bool isPrimalRM(const mpz_t & n, unsigned int k) {
+	// n is entry
+	// k is accuracy
+	
+	mpz_t a;
+	mpz_init(a);
+	mpz_t x;
+	mpz_init(x);
+	mpz_t n_1;
+	mpz_init_set( n_1 , n );
+	mpz_sub_ui( n_1, n_1, 1 ); // n_1 = n - 1
+	mpz_t t;
+	mpz_init_set( t, n_1 );
+	
+	// write n-1 as tx2^s with t odd by factoring powers of 2
+	int s = 0;
+	while ( isEven(t) ) {
+		mpz_fdiv_q_2exp( t, t, 1 );
+		s++;
+	}
+	
+	// loop
+	//while(true) {
+	for(unsigned int i=0 ; i<k ; ++i) {
+		// DEBUG std::cout << "boucle for :" << i << std::endl;
+		setToRandom(a, (unsigned long)2, (unsigned long)mpz_get_ui(n)-1);
+		mpz_powm(x, a, t, n); // x=a^t mod n
+		if( (mpz_cmp_ui(x, (unsigned long)1)==0) || (mpz_cmp(x, n_1)==0) ) {
+			continue; // next loop
+		}
+		
+		// for r=1...s-1
+		for(int r = 1 ; r < s-1 ; ++r) {
+			mpz_powm_ui(x, x, (unsigned long)2, n); // x=x^2 mod n
+			// if x = 1
+			if( mpz_cmp_ui(x, (unsigned long)1) ) {
+				return false; // n is composite
+			}
+			// if x = n-1
+			if( mpz_cmp(x, n_1) ) {
+				continue; // next loop
+			}
+		}
+		
+		return false; // n is composite
+	}
+	//} // end while	
+
+	return true;
+}
+
+// get the nextprime from given entry
+void custom_nextprime(mpz_t & result, const mpz_t & entry) {
+	// result = entry
+	mpz_set(result, entry);
+	// if entry is even
+	if(isEven(entry)) {
+		// entry++
+		mpz_add_ui(result, result, (unsigned long int)1);
+	}
+	// result is now odd
+	
+	// while result isn't primal
+	while( ! isPrimalRM(result, (unsigned int)4) ) {
+		// entry+2
+		// DEBUG std::cout << "entry+2" << std::endl;
+		mpz_add_ui(result, result, (unsigned long int)2);
+	}
+}
+
 
 /* Main subroutine */
 int main()
@@ -91,7 +165,7 @@ int main()
     
     mpz_init(M);
     mpz_init(c);
-    
+
  
     /* This function creates the keys. The basic algorithm is...
      *
@@ -116,12 +190,12 @@ int main()
     // generate random (BITSTRENGTH bits) for p
     mpz_urandomb(p, r_state, BITSTRENGTH);
     // make it prime
-    mpz_nextprime(p, p);
+    custom_nextprime(p, p);
 
     // generate random for q
     mpz_urandomb(q, r_state, BITSTRENGTH);
     // make it prime
-    mpz_nextprime(q, q);
+    custom_nextprime(q, q);
 
     // For testing -> Fix p & q
     /*
