@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <iostream>
 #include <gmp.h>
+#include <sstream>
 
+#define MESSAGE_SIZE 10
 #define BITSTRENGTH  14              /* size of modulus (n) in bits */
 #define PRIMESIZE (BITSTRENGTH / 2)  /* size of the primes p and q  */
 
@@ -14,6 +16,24 @@
 mpz_t d,e,n;
 mpz_t M,c;
 gmp_randstate_t r_state;
+
+// compute random message 
+std::string getRandomMessage(int taille){
+	// init vars
+	std::string random_out_message; 
+	std::ostringstream keep_the_rand_integer;
+	int rand_integer; 
+	// initialisation de rand
+	srand(time(NULL));
+	for (int i; i<taille;i++){
+		// rand integer 0 to 9 
+		rand_integer = rand() % 10;
+		// keep the rand integer in the out message  
+		keep_the_rand_integer << rand_integer;
+		random_out_message = keep_the_rand_integer.str();
+	}
+	return random_out_message;
+} 
 
 // compute random between min (include) and max (include)
 void setToRandom(mpz_t & rand_Num, const unsigned int min, const unsigned int max) {
@@ -227,7 +247,13 @@ int main()
     // init vars
     mpz_t decrypt_block_mpz;
 	mpz_init(decrypt_block_mpz);
-	std::string original_msg = "6882326879666683";
+	// std::string original_msg = "6882326879666683";
+	
+	// message random 
+	std::string original_msg = "";
+	original_msg = getRandomMessage(MESSAGE_SIZE);
+	std::cout << "Message Random : " << original_msg << std::endl;
+	
 	std::string encrypted_msg;
 	std::string decrypted_msg;
 	int temp_msg_block_index = 0;
