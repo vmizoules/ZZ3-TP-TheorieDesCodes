@@ -10,6 +10,9 @@
 #define BITSTRENGTH  14              /* size of modulus (n) in bits */
 #define PRIMESIZE (BITSTRENGTH / 2)  /* size of the primes p and q  */
 
+// #define DEBUGPOWM 
+// #define DEBUG
+
 /* declare global variables */
 
 mpz_t d,e,n;
@@ -36,11 +39,100 @@ bool isEven(const mpz_t & num) {
 	return ret;
 }
 
+// compute random message 
+std::string getRandomMessage(int taille){
+	// init vars
+	std::ostringstream rand_stream;
+	int rand_integer; 
+	// initialisation de rand
+	srand(time(NULL));
+	for (int i; i<taille;i++){
+		// rand integer 0 to 9 
+		rand_integer = 1+ (rand() % 9);
+		// keep the rand integer in the out message  
+		rand_stream << rand_integer;
+	}
+	return rand_stream.str();
+} 
+
+// compute random between min (include) and max (include)
+void setToRandom(mpz_t & rand_Num, const unsigned long min, const unsigned long max) {
+
+	// init vars 
+	unsigned long rand_min_ui = min; // random between min (include)
+	unsigned long rand_max_ui = max; // and max (include)
+	mpz_t rand_max;
+	mpz_init(rand_max);
+	// compute randmax to make rand between 0 and rand_max (not included)
+	mpz_init_set_ui(rand_max, (unsigned long)(rand_max_ui +1 -rand_min_ui ));
+
+	// get random between 0 and rand_max-rand_min
+	mpz_urandomm(rand_Num,r_state,rand_max);
+
+	// add rand_min to have random between rand_min and rand_max
+	mpz_add_ui(rand_Num, rand_Num, rand_min_ui);
+
+	// for DEBUG
+	//gmp_printf("%Zd\n", rand_Num);
+
+}
+
+bool isPrimalRM(const mpz_t & n, unsigned int k) {
+	// n is entry
+	// k is accuracy
+	
+	mpz_t a;
+	mpz_init(a);
+	mpz_t x;
+	mpz_init(x);
+	mpz_t n_1;
+	mpz_init_set( n_1 , n );
+	mpz_sub_ui( n_1, n_1, 1 ); // n_1 = n - 1
+	mpz_t t;
+	mpz_init_set( t, n_1 );
+	
+	// write n-1 as tx2^s with t odd by factoring powers of 2
+	int s = 0;
+	while ( isEven(t) ) {
+		mpz_fdiv_q_2exp( t, t, 1 );
+		s++;
+	}
+	
+	// loop
+	//while(true) {
+	for(unsigned int i=0 ; i<k ; ++i) {
+		// DEBUG std::cout << "boucle for :" << i << std::endl;
+		setToRandom(a, (unsigned long)2, (unsigned long)mpz_get_ui(n)-1);
+		mpz_powm(x, a, t, n); // x=a^t mod n
+		if( (mpz_cmp_ui(x, (unsigned long)1)==0) || (mpz_cmp(x, n_1)==0) ) {
+			continue; // next loop
+		}
+		
+		// for r=1...s-1
+		for(int r = 1 ; r < s-1 ; ++r) {
+			mpz_powm_ui(x, x, (unsigned long)2, n); // x=x^2 mod n
+			// if x = 1
+			if( mpz_cmp_ui(x, (unsigned long)1) ) {
+				return false; // n is composite
+			}
+			// if x = n-1
+			if( mpz_cmp(x, n_1) ) {
+				continue; // next loop
+			}
+		}
+		
+		return false; // n is composite
+	}
+	//} // end while	
+
+	return true;
+}
+
 // m ≡ g k mod p
 // mpz_powm(c, M, e, n);	
 // algorithm 3 Exponentiation by squaring : Require: three integers g, k and p ;
 // compute m
-void powm(mpz_t & m, const mpz_t & M, const mpz_t & e, const mpz_t & p ){
+void custom_powm(mpz_t & m, const mpz_t & M, const mpz_t & e, const mpz_t & p ){
 	// init vars
 	bool kNull = false;
 	mpz_t y,g,k;
@@ -152,95 +244,6 @@ void powm(mpz_t & m, const mpz_t & M, const mpz_t & e, const mpz_t & p ){
 		mpz_get_str(k_str,10,k);mpz_get_str(g_str,10,g);mpz_get_str(p_str,10,p);mpz_get_str(m_str,10,m);mpz_get_str(y_str,10,y);
 		std::cout << "Fin if m:" << m_str << " g:" << g_str <<" k:" << k_str  << " p:" << p_str << " y:" << y_str << std::endl << std::endl;
 	#endif	
-}
-
-// compute random message 
-std::string getRandomMessage(int taille){
-	// init vars
-	std::ostringstream rand_stream;
-	int rand_integer; 
-	// initialisation de rand
-	srand(time(NULL));
-	for (int i; i<taille;i++){
-		// rand integer 0 to 9 
-		rand_integer = 1+ (rand() % 9);
-		// keep the rand integer in the out message  
-		rand_stream << rand_integer;
-	}
-	return rand_stream.str();
-} 
-
-// compute random between min (include) and max (include)
-void setToRandom(mpz_t & rand_Num, const unsigned long min, const unsigned long max) {
-
-	// init vars 
-	unsigned long rand_min_ui = min; // random between min (include)
-	unsigned long rand_max_ui = max; // and max (include)
-	mpz_t rand_max;
-	mpz_init(rand_max);
-	// compute randmax to make rand between 0 and rand_max (not included)
-	mpz_init_set_ui(rand_max, (unsigned long)(rand_max_ui +1 -rand_min_ui ));
-
-	// get random between 0 and rand_max-rand_min
-	mpz_urandomm(rand_Num,r_state,rand_max);
-
-	// add rand_min to have random between rand_min and rand_max
-	mpz_add_ui(rand_Num, rand_Num, rand_min_ui);
-
-	// for DEBUG
-	//gmp_printf("%Zd\n", rand_Num);
-
-}
-
-bool isPrimalRM(const mpz_t & n, unsigned int k) {
-	// n is entry
-	// k is accuracy
-	
-	mpz_t a;
-	mpz_init(a);
-	mpz_t x;
-	mpz_init(x);
-	mpz_t n_1;
-	mpz_init_set( n_1 , n );
-	mpz_sub_ui( n_1, n_1, 1 ); // n_1 = n - 1
-	mpz_t t;
-	mpz_init_set( t, n_1 );
-	
-	// write n-1 as tx2^s with t odd by factoring powers of 2
-	int s = 0;
-	while ( isEven(t) ) {
-		mpz_fdiv_q_2exp( t, t, 1 );
-		s++;
-	}
-	
-	// loop
-	//while(true) {
-	for(unsigned int i=0 ; i<k ; ++i) {
-		// DEBUG std::cout << "boucle for :" << i << std::endl;
-		setToRandom(a, (unsigned long)2, (unsigned long)mpz_get_ui(n)-1);
-		mpz_powm(x, a, t, n); // x=a^t mod n
-		if( (mpz_cmp_ui(x, (unsigned long)1)==0) || (mpz_cmp(x, n_1)==0) ) {
-			continue; // next loop
-		}
-		
-		// for r=1...s-1
-		for(int r = 1 ; r < s-1 ; ++r) {
-			mpz_powm_ui(x, x, (unsigned long)2, n); // x=x^2 mod n
-			// if x = 1
-			if( mpz_cmp_ui(x, (unsigned long)1) ) {
-				return false; // n is composite
-			}
-			// if x = n-1
-			if( mpz_cmp(x, n_1) ) {
-				continue; // next loop
-			}
-		}
-		
-		return false; // n is composite
-	}
-	//} // end while	
-
-	return true;
 }
 
 // get the nextprime from given entry
@@ -462,7 +465,7 @@ int main()
 			
 			#ifdef DEBUG
 				std::cout << "Je rentre j:"<< j << "i:"<< i ;
-				std::cout <<"m:" << (char)original_msg[j] << "";
+				std::cout <<"m:" << (char)original_msg[j] << "" << std::endl;
 			#endif 
 		}
 		temp_msg_block_index = 0;
@@ -472,7 +475,7 @@ int main()
 
 		// encrypt with exponential function mpz_pown(mpz_t rop, mpz_t base, mpz_t exp, mpz_t mod)
 		//mpz_powm(c, M, e, n);
-		powm(c, M, e, n); 
+		custom_powm(c, M, e, n); 
 		
 		// save encrypted block
 		mpz_get_str(buffer, 10, c);
@@ -487,7 +490,7 @@ int main()
 		
 		// decrypt block
 		//mpz_powm(decrypt_block_mpz, c, d, n);
-		powm(decrypt_block_mpz, c, d, n); 
+		custom_powm(decrypt_block_mpz, c, d, n); 
 	
 		// save decrypted block
 		mpz_get_str(buffer, 10, decrypt_block_mpz); 
@@ -497,7 +500,7 @@ int main()
 			// display decrypted block
 			char decrypt_message_str[1000];
 			mpz_get_str(decrypt_message_str,10,decrypt_block_mpz);  
-			std::cout << "\t Decrypted = " << decrypt_block_mpz << std::endl << std::endl;
+			std::cout << "\t Decrypted = " << decrypt_message_str << std::endl << std::endl;
 		#endif		
 	}
 
