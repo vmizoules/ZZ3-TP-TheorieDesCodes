@@ -6,16 +6,153 @@
 #include <iostream>
 #include <gmp.h>
 #include <sstream>
-
 #define MESSAGE_SIZE 10
 #define BITSTRENGTH  14              /* size of modulus (n) in bits */
 #define PRIMESIZE (BITSTRENGTH / 2)  /* size of the primes p and q  */
 
-/* Declare global variables */
+/* declare global variables */
 
 mpz_t d,e,n;
 mpz_t M,c;
 gmp_randstate_t r_state;
+
+// check parity of a mpz number
+bool isEven(const mpz_t & num) {
+	mpz_t r;
+	mpz_init(r);
+	bool ret = true;
+	
+	// compute modulo 2
+	mpz_cdiv_r_ui(r, num, (unsigned int) 2);
+	
+	// check if rest is == 0 or not
+	if(mpz_cmp_ui(r, 0)) {
+		ret = false;
+	}
+	
+	// clear
+	mpz_clear(r);
+	
+	return ret;
+}
+
+// m ≡ g k mod p
+// mpz_powm(c, M, e, n);	
+// algorithm 3 Exponentiation by squaring : Require: three integers g, k and p ;
+// compute m
+void powm(mpz_t & m, const mpz_t & M, const mpz_t & e, const mpz_t & p ){
+	// init vars
+	bool kNull = false;
+	mpz_t y,g,k;
+	// keep vars M and e 
+	mpz_init_set(g, M);
+	mpz_init_set(k, e);
+
+	#ifdef DEBUGPOWM
+		std::cout << std::endl << " <<<<< POWM >>>>>" << std::endl;	
+		char k_str[1000]; char g_str[1000]; char p_str[1000];char m_str[1000]; char y_str[1000];
+	
+		mpz_get_str(k_str,10,k);mpz_get_str(g_str,10,g);mpz_get_str(p_str,10,p);mpz_get_str(m_str,10,m);
+	
+		std::cout << " m:" << m_str << " g:" << g_str <<" k:" << k_str  << " p:" << p_str << std::endl;
+	#endif 
+
+	// if k < 0 then
+	if(mpz_sgn(k)==-1){
+		
+		#ifdef DEBUGPOWM
+			std::cout << "	Premier if Comparateur : " << mpz_cmp_ui(k, (unsigned long int) 0) << mpz_sgn(k) << std::endl;
+		#endif
+		
+		// g <- 1/g
+		mpz_invert(g, g, p); 
+		// k <- -k
+		mpz_neg(k,k);
+		#ifdef DEBUGPOWM
+			mpz_get_str(k_str,10,k);mpz_get_str(g_str,10,g);mpz_get_str(p_str,10,p);mpz_get_str(m_str,10,m);
+			std::cout << "	Fin premier if m:" << m_str << " g:" << g_str <<" k:" << k_str  << " p:" << p_str << std::endl;
+		#endif 
+		
+	}
+	// if k = 0 then
+	if(mpz_cmp_ui (k, (unsigned long int) 0) == 0){
+		#ifdef DEBUGPOWM
+			std::cout << "	Deuxieme if m:" << std::endl;
+		#endif 
+		
+		
+		// return m = 1
+		mpz_set_ui (m, (unsigned long int) 1);	
+		kNull = true;
+		#ifdef DEBUGPOWM
+			mpz_get_str(k_str,10,k);mpz_get_str(g_str,10,g);mpz_get_str(p_str,10,p);mpz_get_str(m_str,10,m);
+			std::cout << "	Fin deuxieme if m:" << m_str << " g:" << g_str <<" k:" << k_str  << " p:" << p_str << std::endl;
+		#endif
+	}
+
+	// y <- 1
+	mpz_init_set_str(y, "1", 0);
+	
+	#ifdef DEBUGPOWM	
+		mpz_get_str(k_str,10,k);mpz_get_str(g_str,10,g);mpz_get_str(p_str,10,p);mpz_get_str(m_str,10,m);mpz_get_str(y_str,10,y);
+		std::cout << "Avant TQ if m:" << m_str << " g:" << g_str <<" k:" << k_str  << " p:" << p_str << " y:" << y_str << std::endl;
+	#endif
+	
+	// while k > 1 do
+	while ((mpz_cmp_ui(k, (unsigned long int) 1)>0)){
+		
+		#ifdef DEBUGPOWM
+			std::cout << "	Dans TQ" << std::endl;
+		#endif
+		
+		// if k is even then
+		if(isEven(k)){
+			#ifdef DEBUGPOWM
+				std::cout << "		Troisieme if "<< std::endl;
+			#endif
+			// g ← g × g mod p
+			mpz_mul (g, g, g); // g * g
+			mpz_mod (g, g, p); // g mod p
+			
+			// k ← k/2
+			mpz_cdiv_q_ui(k, k, (unsigned long int) 2); 
+			#ifdef DEBUGPOWM
+				mpz_get_str(k_str,10,k);mpz_get_str(g_str,10,g);mpz_get_str(p_str,10,p);mpz_get_str(m_str,10,m);mpz_get_str(y_str,10,y);
+				std::cout << "		Fin if troisieme m:" << m_str << " g:" << g_str <<" k:" << k_str  << " p:" << p_str << " y:" << y_str << std::endl;
+			#endif
+		} else {
+			#ifdef DEBUGPOWM
+				std::cout << "		Dans Else "  << std::endl;
+			#endif
+			// y ←g×y
+			mpz_mul (y, g, y);
+			
+			// g ←g×g
+			mpz_mul (g, g, g);
+
+			
+			// k ← (k − 1)/2 
+			mpz_sub_ui(k, k, (unsigned long int) 1); // k ← (k − 1)
+			
+			mpz_cdiv_q_ui (k, k, (unsigned long int) 2); // k ← k/2
+			#ifdef DEBUGPOWM
+				mpz_get_str(k_str,10,k);mpz_get_str(g_str,10,g);mpz_get_str(p_str,10,p);mpz_get_str(m_str,10,m);mpz_get_str(y_str,10,y);
+				std::cout << "		Fin else m:" << m_str << " g:" << g_str <<" k:" << k_str  << " p:" << p_str << " y:" << y_str << std::endl;
+			#endif
+		}
+	} 
+
+	// return m = g × y
+	if(!kNull){
+		mpz_mul (m, g, y);
+		mpz_mod (m, m, p); // m mod p
+	}
+	#ifdef DEBUGPOWM
+		std::cout << "Fin de la fonction "  << std::endl;
+		mpz_get_str(k_str,10,k);mpz_get_str(g_str,10,g);mpz_get_str(p_str,10,p);mpz_get_str(m_str,10,m);mpz_get_str(y_str,10,y);
+		std::cout << "Fin if m:" << m_str << " g:" << g_str <<" k:" << k_str  << " p:" << p_str << " y:" << y_str << std::endl << std::endl;
+	#endif	
+}
 
 // compute random message 
 std::string getRandomMessage(int taille){
@@ -27,7 +164,7 @@ std::string getRandomMessage(int taille){
 	srand(time(NULL));
 	for (int i; i<taille;i++){
 		// rand integer 0 to 9 
-		rand_integer = rand() % 10;
+		rand_integer = 1+ (rand() % 9);
 		// keep the rand integer in the out message  
 		keep_the_rand_integer << rand_integer;
 		random_out_message = keep_the_rand_integer.str();
@@ -56,26 +193,6 @@ void setToRandom(mpz_t & rand_Num, const unsigned int min, const unsigned int ma
 	//gmp_printf("%Zd\n", rand_Num);
 	
 	return;
-}
-
-// check parity of a mpz number
-bool isEven(const mpz_t & num) {
-	mpz_t r;
-	mpz_init(r);
-	bool ret = true;
-	
-	// compute modulo 2
-	mpz_cdiv_r_ui(r, num, (unsigned int) 2);
-	
-	// check if rest is == 0 or not
-	if(mpz_cmp_ui(r, 0)) {
-		ret = false;
-	}
-	
-	// clear
-	mpz_clear(r);
-	
-	return ret;
 }
 
 /* Main subroutine */
@@ -115,7 +232,7 @@ int main()
     mpz_init(p);
     mpz_init(q);
     
-    // generate random (BITSTRENGTH bits) for p
+	// generate random (BITSTRENGTH bits) for p
     mpz_urandomb(p, r_state, BITSTRENGTH);
     // make it prime
     mpz_nextprime(p, p);
@@ -125,11 +242,9 @@ int main()
     // make it prime
     mpz_nextprime(q, q);
 
-    // For testing -> Fix p & q
-    /*
-    mpz_init_set_str(p, "47", 0);
-    mpz_init_set_str(q, "71", 0);
-    */
+	// For testing -> Fix p & q
+    /*mpz_init_set_str(p, "47", 0); 
+    mpz_init_set_str(q, "71", 0);*/    
     
     // display p
     char p_str[1000];
@@ -186,6 +301,7 @@ int main()
      */
     // set random e between 2 and phi-1
     setToRandom(e, 2, mpz_get_ui(x)-1);
+    // mpz_init_set_str(e, "79", 0);  
     // check if e is even
     if(isEven(e)) {
 		// change the parity (+1)
@@ -247,7 +363,7 @@ int main()
     // init vars
     mpz_t decrypt_block_mpz;
 	mpz_init(decrypt_block_mpz);
-	// std::string original_msg = "6882326879666683";
+	//std::string original_msg = "6882326879666683";
 	
 	// message random 
 	std::string original_msg = "";
@@ -287,8 +403,9 @@ int main()
 		// copy temp_msg_block_str to M
 		mpz_init_set_str(M, temp_msg_block_str, 0);
 
-		// encrypt with exponential function // mpz_pown(mpz_t rop, mpz_t base, mpz_t exp, mpz_t mod)
-		mpz_powm(c, M, e, n);
+		// encrypt with exponential function mpz_pown(mpz_t rop, mpz_t base, mpz_t exp, mpz_t mod)
+		//mpz_powm(c, M, e, n);
+		powm(c, M, e, n); 
 		
 		// save encrypted block
 		mpz_get_str(buffer, 10, c);
@@ -302,8 +419,9 @@ int main()
 		#endif
 		
 		// decrypt block
-		mpz_powm(decrypt_block_mpz, c, d, n);
-		
+		//mpz_powm(decrypt_block_mpz, c, d, n);
+		powm(decrypt_block_mpz, c, d, n); 
+	
 		// save decrypted block
 		mpz_get_str(buffer, 10, decrypt_block_mpz); 
 		decrypted_msg += buffer;
