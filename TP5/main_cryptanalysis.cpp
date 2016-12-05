@@ -154,7 +154,7 @@ class VigenereCryptanalysis
  
 int main()
 {
-	string file_name="ciphertext_3.txt";
+	string file_name="ciphertext_4_tolower.txt";
 	
 	ifstream t(file_name);
 	string input((istreambuf_iterator<char>(t)),istreambuf_iterator<char>());
