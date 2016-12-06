@@ -7,7 +7,7 @@ Pour lancer notre programme :
 
 	make && ./tp6
 
-Pour nettoyer le projet
+Pour nettoyer le projet :
 
 	make clean
 	make clear
@@ -31,7 +31,6 @@ L'algo RSA repose sur 6 étapes :
 ### 2)
 
 Pour tester l'algorithme de chiffrement et déchiffrement sur des données aléatoires, nous avons écrit une fonction nommée `getRandomMessage` qui génère un message aléatoire de taille fixée par l'utilisateur.
-
 Notre programme fonctionne bien !
 
 ### 3)
